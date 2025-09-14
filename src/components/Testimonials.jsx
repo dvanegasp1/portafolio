@@ -71,9 +71,9 @@ const Testimonials = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
-            <Star className="w-4 h-4 mr-2 text-purple-400" />
-            <span className="text-sm font-medium text-purple-300">Testimonios</span>
+          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600/20 to-rose-600/20 rounded-full border border-red-500/30 mb-6">
+            <Star className="w-4 h-4 mr-2 text-red-400" />
+            <span className="text-sm font-medium text-red-300">Testimonios</span>
           </div>
           
           <h2 className="text-4xl lg:text-6xl font-bold mb-6">
@@ -101,7 +101,7 @@ const Testimonials = () => {
             >
               <div className="glass-effect rounded-2xl p-8 h-full hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20 relative">
                 {/* Quote Icon */}
-                <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-r from-red-500 to-rose-500 rounded-full flex items-center justify-center">
                   <Quote className="w-4 h-4 text-white" />
                 </div>
 
@@ -133,13 +133,13 @@ const Testimonials = () => {
                     
                     <div>
                       <h4 className="font-semibold text-white">{testimonial.name}</h4>
-                      <p className="text-sm text-purple-300">{testimonial.position}</p>
+                      <p className="text-sm text-red-300">{testimonial.position}</p>
                       <p className="text-sm text-gray-400">{testimonial.company}</p>
                     </div>
                   </div>
                   
                   <div className="mt-3">
-                    <span className="text-xs text-purple-300 bg-purple-500/10 rounded-full px-3 py-1">
+                    <span className="text-xs text-red-300 bg-red-500/10 rounded-full px-3 py-1">
                       {testimonial.industry}
                     </span>
                   </div>

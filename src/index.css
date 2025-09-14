@@ -10,7 +10,7 @@
   --card-foreground: 210 40% 98%;
   --popover: 222.2 84% 4.9%;
   --popover-foreground: 210 40% 98%;
-  --primary: 258 90% 66%;
+  --primary: 0 84% 60%;
   --primary-foreground: 0 0% 100%;
   --secondary: 240 4.8% 95.9%;
   --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,7 +22,7 @@
   --destructive-foreground: 0 0% 98%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  --ring: 258 90% 66%;
+  --ring: 0 84% 60%;
   --radius: 0.5rem;
 }
 
@@ -43,7 +43,7 @@
 /* Custom utility classes used in components */
 @layer utilities {
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-rose-400;
   }
   .glass-effect {
     @apply bg-white/5 backdrop-blur-md border border-white/10;

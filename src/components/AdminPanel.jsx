@@ -58,7 +58,7 @@ export default function AdminPanel() {
                 ['whyus','Why Us JSON'],
                 ['contact','Contacto'],
               ].map(([key,label]) => (
-                <button key={key} onClick={() => setTab(key)} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab===key? 'bg-purple-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{label}</button>
+                <button key={key} onClick={() => setTab(key)} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab===key? 'bg-red-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{label}</button>
               ))}
             </aside>
 
@@ -165,7 +165,7 @@ export default function AdminPanel() {
               )}
 
               <div className="flex gap-3 mt-6">
-                <Button onClick={save} className="bg-purple-600 text-white">Save</Button>
+                <Button onClick={save} className="bg-red-600 text-white">Save</Button>
                 <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
                 <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
               </div>

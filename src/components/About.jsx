@@ -19,9 +19,9 @@ export default function About() {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
-              <Award className="w-4 h-4 mr-2 text-purple-400" />
-              <span className="text-sm font-medium text-purple-300">About</span>
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600/20 to-rose-600/20 rounded-full border border-red-500/30 mb-6">
+              <Award className="w-4 h-4 mr-2 text-red-400" />
+              <span className="text-sm font-medium text-red-300">About</span>
             </div>
 
             <h2 className="text-4xl lg:text-6xl font-bold mb-6">
@@ -67,7 +67,7 @@ export default function About() {
                 <div className="absolute -top-6 -left-6 w-64">
                   <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mr-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center mr-3">
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                       <div>
@@ -83,7 +83,7 @@ export default function About() {
                 <div className="absolute -bottom-6 -right-6 w-72">
                   <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center mr-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 flex items-center justify-center mr-3">
                         <Icon className="w-5 h-5 text-white" />
                       </div>
                       <div>

@@ -18,8 +18,8 @@ export default function Projects() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
-            <span className="text-sm font-medium text-purple-300">Projects</span>
+          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600/20 to-rose-600/20 rounded-full border border-red-500/30 mb-6">
+            <span className="text-sm font-medium text-red-300">Projects</span>
           </div>
 
           <h2 className="text-4xl lg:text-6xl font-bold mb-6">
@@ -48,13 +48,13 @@ export default function Projects() {
                 <p className="text-gray-300 mb-4">{p.description}</p>
                 <div className="mb-6">
                   {p.tags?.map((t) => (
-                    <span key={t} className="text-xs text-purple-300 bg-purple-500/10 rounded-full px-3 py-1 inline-block mr-2 mb-2">
+                    <span key={t} className="text-xs text-red-300 bg-red-500/10 rounded-full px-3 py-1 inline-block mr-2 mb-2">
                       {t}
                     </span>
                   ))}
                 </div>
                 {p.link && (
-                  <Button asChild variant="ghost" className="text-purple-300 hover:text-white hover:bg-purple-600/20">
+                  <Button asChild variant="ghost" className="text-red-300 hover:text-white hover:bg-red-600/20">
                     <a href={p.link}>
                       Learn More
                       <ArrowRight className="ml-2 w-4 h-4 inline" />

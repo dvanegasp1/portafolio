@@ -80,7 +80,7 @@ export default function Contact() {
                 <textarea className="w-full bg-transparent border border-white/20 rounded px-3 py-2" rows={6} name="message" value={formData.message} onChange={handleInputChange} placeholder="Cuéntanos cómo podemos ayudarte..." />
               </div>
               <div className="md:col-span-2 flex gap-4">
-                <Button type="submit" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                <Button type="submit" className="bg-gradient-to-r from-red-600 to-rose-600 text-white">
                   Enviar Mensaje
                   <Send className="w-4 h-4 ml-2" />
                 </Button>
@@ -97,7 +97,7 @@ export default function Contact() {
             {contactInfo.map((c) => (
               <div key={c.title} className="glass-effect rounded-2xl p-6 border border-white/10">
                 <div className="flex items-start">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center mr-3">
                     <c.icon className="w-5 h-5 text-white" />
                   </div>
                   <div>
