@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Users, Target } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient.js';
 import { useContent } from '@/content/ContentContext.jsx';
 import { Button } from '@/components/ui/button';
 
@@ -8,10 +9,22 @@ const iconMap = { Users, Target };
 
 export default function Hero() {
   const { content } = useContent();
+
   const scrollTo = (selector) => {
     const el = document.querySelector(selector);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const badge = content.hero?.badge || content.role || 'Data Analytics';
+  const title = content.hero?.title || 'Turning Data Into Decisions';
+  const subtitle = content.hero?.subtitle || 'Clean data, clear dashboards, and compelling stories.';
+  const primaryHref = content.hero?.primaryCta?.href || '#projects';
+  const primaryLabel = content.hero?.primaryCta?.label || 'View Projects';
+  const secondaryHref = content.hero?.secondaryCta?.href || '#contact';
+  const secondaryLabel = content.hero?.secondaryCta?.label || 'Contact Me';
+  const heroImage = content.hero?.image_path && supabase
+    ? supabase.storage.from('portfolio-assets').getPublicUrl(content.hero.image_path).data.publicUrl
+    : 'https://images.unsplash.com/photo-1552581234-26160f608093';
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -24,37 +37,41 @@ export default function Hero() {
 
       <div className="container mx-auto px-6 py-20 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left content */}
-          <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="text-center lg:text-left">
+          {/* Left content wired to Supabase */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center lg:text-left"
+          >
             <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
-              <span className="text-sm font-medium text-purple-300">Consultoría de Élite</span>
+              <span className="text-sm font-medium text-purple-300">{badge}</span>
             </div>
 
             <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
-              Transformamos
-              <span className="gradient-text block">Tu Empresa</span>
+              <span className="gradient-text block">{title}</span>
             </h1>
 
             <p className="text-xl text-gray-300 mb-8 max-w-2xl">
-              Estrategias innovadoras que impulsan el crecimiento exponencial. Llevamos tu negocio al siguiente nivel con soluciones personalizadas y resultados medibles.
+              {subtitle}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button onClick={() => scrollTo('#projects')} size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-full font-semibold text-lg pulse-glow group">
-                Ver Proyectos
+              <Button onClick={() => scrollTo(primaryHref)} size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-full font-semibold text-lg pulse-glow group">
+                {primaryLabel}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button onClick={() => scrollTo('#about')} variant="outline" size="lg" className="border-2 border-purple-500 text-purple-300 hover:bg-purple-500/10 px-8 py-4 rounded-full font-semibold text-lg">
-                Conocer Más
+              <Button onClick={() => scrollTo(secondaryHref)} variant="outline" size="lg" className="border-2 border-purple-500 text-purple-300 hover:bg-purple-500/10 px-8 py-4 rounded-full font-semibold text-lg">
+                {secondaryLabel}
               </Button>
             </div>
 
             <div className="mt-12 pt-8 border-t border-purple-500/30" />
           </motion.div>
 
-          {/* Right visual with overlay cards */}
+          {/* Right visual with overlay cards (wired to whyUs) */}
           <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="relative">
-            <img className="w-full h-auto rounded-2xl shadow-2xl" alt="Equipo trabajando en oficina" src="https://images.unsplash.com/photo-1552581234-26160f608093" />
+            <img className="w-full h-auto rounded-2xl shadow-2xl" alt="Hero" src={heroImage} />
             {/* Top-left overlay */}
             {(() => { const Icon = iconMap[content.whyUs?.[0]?.icon] || Users; return (
             <div className="absolute -top-6 -left-6 w-64">
