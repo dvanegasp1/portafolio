@@ -20,6 +20,7 @@ export default function AdminPanel() {
   const [magicSentTo, setMagicSentTo] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [heroFile, setHeroFile] = useState(null);
+  const [projectFiles, setProjectFiles] = useState({});
 
   useEffect(() => setDraft(content), [content]);
 
@@ -267,17 +268,78 @@ export default function AdminPanel() {
 
               {tab === 'services' && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Services JSON</h3>
-                  <textarea spellCheck="false" wrap="off" className="w-full bg-transparent border border-white/20 rounded px-3 py-2 font-mono text-sm resize-y min-h-[360px]" rows={18} value={JSON.stringify(draft.services, null, 2)} onChange={(e)=>{ try{ onChange('services', JSON.parse(e.target.value||'[]')); } catch{} }} />
-                  <p className="text-xs text-gray-400 mt-1">Fields: icon (BarChart3|Database|LineChart|Workflow), title, description</p>
+                  <h3 className="text-lg font-semibold mb-4">Services</h3>
+                  <div className="space-y-4">
+                    {draft.services.map((svc, i) => (
+                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-3 gap-3">
+                          <Field label="Icon">
+                            <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                              value={svc.icon}
+                              onChange={(e)=>{
+                                const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], icon:v}; return {...d, services:arr};});
+                              }}>
+                              {['BarChart3','Database','LineChart','Workflow'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          </Field>
+                          <Field label="Title">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.title}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], title:v}; return {...d, services:arr};}); }} />
+                          </Field>
+                          <Field label="Description">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.description}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], description:v}; return {...d, services:arr};}); }} />
+                          </Field>
+                        </div>
+                        <div className="text-right mt-2">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, services: d.services.filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, services:[...d.services,{ icon:'BarChart3', title:'', description:''}] }))}>Add Service</Button>
+                  </div>
                 </div>
               )}
 
               {tab === 'projects' && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Projects JSON</h3>
-                  <textarea spellCheck="false" wrap="off" className="w-full bg-transparent border border-white/20 rounded px-3 py-2 font-mono text-sm resize-y min-h-[360px]" rows={18} value={JSON.stringify(draft.projects, null, 2)} onChange={(e)=>{ try{ onChange('projects', JSON.parse(e.target.value||'[]')); } catch{} }} />
-                  <p className="text-xs text-gray-400 mt-1">Fields: title, description, tags[], link</p>
+                  <h3 className="text-lg font-semibold mb-4">Projects</h3>
+                  <div className="space-y-4">
+                    {draft.projects.map((p, i) => (
+                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-2 gap-3">
+                          <Field label="Title">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.title}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], title:v}; return {...d, projects:arr};}); }} />
+                          </Field>
+                          <Field label="Link">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.link||''}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], link:v}; return {...d, projects:arr};}); }} />
+                          </Field>
+                          <Field label="Description">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.description}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], description:v}; return {...d, projects:arr};}); }} />
+                          </Field>
+                          <Field label="Tags (comma-separated)">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(p.tags||[]).join(', ')}
+                              onChange={(e)=>{ const arrTags=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], tags:arrTags}; return {...d, projects:arr};}); }} />
+                          </Field>
+                          <Field label="Cover Image">
+                            <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setProjectFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
+                            {p.cover_image_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {p.cover_image_path}</div>}
+                          </Field>
+                        </div>
+                        <div className="text-right mt-2">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, projects: d.projects.filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, projects:[...d.projects,{ title:'', description:'', tags:[], link:'', cover_image_path:null}] }))}>Add Project</Button>
+                  </div>
                 </div>
               )}
 
@@ -291,9 +353,35 @@ export default function AdminPanel() {
 
               {tab === 'whyus' && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Why Us JSON</h3>
-                  <textarea spellCheck="false" wrap="off" className="w-full bg-transparent border border-white/20 rounded px-3 py-2 font-mono text-sm resize-y min-h-[280px]" rows={14} value={JSON.stringify(draft.whyUs, null, 2)} onChange={(e)=>{ try{ onChange('whyUs', JSON.parse(e.target.value||'[]')); } catch{} }} />
-                  <p className="text-xs text-gray-400 mt-1">Fields: icon (Users|Target), title, subtitle</p>
+                  <h3 className="text-lg font-semibold mb-4">Why Us</h3>
+                  <div className="space-y-4">
+                    {draft.whyUs.map((w, i) => (
+                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-3 gap-3">
+                          <Field label="Icon">
+                            <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.icon}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], icon:v}; return {...d, whyUs:arr};}); }}>
+                              {['Users','Target'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          </Field>
+                          <Field label="Title">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.title}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], title:v}; return {...d, whyUs:arr};}); }} />
+                          </Field>
+                          <Field label="Subtitle">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.subtitle}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], subtitle:v}; return {...d, whyUs:arr};}); }} />
+                          </Field>
+                        </div>
+                        <div className="text-right mt-2">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, whyUs: d.whyUs.filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, whyUs:[...d.whyUs,{ icon:'Users', title:'', subtitle:''}] }))}>Add Item</Button>
+                  </div>
                 </div>
               )}
 

@@ -243,7 +243,7 @@ export function ContentProvider({ children }) {
     const s7del = await supabase.from('projects').delete().eq('site_id', 1);
     if (s7del.error) errors.push(s7del.error);
     if (Array.isArray(c.projects) && c.projects.length) {
-      const rows = c.projects.map((p, idx) => ({ site_id: 1, title: p.title, description: p.description, link: p.link || null, sort_order: (idx + 1) * 10 }));
+      const rows = c.projects.map((p, idx) => ({ site_id: 1, title: p.title, description: p.description, link: p.link || null, cover_image_path: p.cover_image_path || null, sort_order: (idx + 1) * 10 }));
       const ins = await supabase.from('projects').insert(rows).select('id');
       if (ins.error) errors.push(ins.error);
       else if (ins.data && ins.data.length) {
