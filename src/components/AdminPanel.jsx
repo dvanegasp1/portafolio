@@ -145,7 +145,7 @@ export default function AdminPanel() {
                 ['whyus','Why Us JSON'],
                 ['contact','Contacto'],
               ].map(([key,label]) => (
-                <button key={key} onClick={() => setTab(key)} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab===key? 'bg-red-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{label}</button>
+                <button key={key} onClick={() => setTab(key)} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab===key? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{label}</button>
               ))}
 
               {/* Auth box */}
@@ -169,7 +169,7 @@ export default function AdminPanel() {
                         setMagicSentTo(auth.email);
                         toast({ title:'Magic Link enviado', description:`Revisa tu bandeja: ${auth.email}` });
                       }
-                    }} className="w-full bg-red-600 text-white">Enviar Magic Link</Button>
+                    }} className="w-full bg-blue-600 text-white">Enviar Magic Link</Button>
                     {magicSentTo && (
                       <div className="text-[11px] text-gray-400">Después de abrir el enlace desde tu correo, regresarás aquí automáticamente.</div>
                     )}
@@ -179,7 +179,7 @@ export default function AdminPanel() {
                   <div className="text-xs text-gray-300">
                     <div className="flex items-center justify-between gap-2">
                       <span>{session.user?.email}</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] ${isAdmin ? 'bg-red-600/30 text-red-200' : 'bg-white/10 text-gray-300'}`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] ${isAdmin ? 'bg-blue-600/30 text-blue-200' : 'bg-white/10 text-gray-300'}`}>
                         {isAdmin ? 'Admin' : 'No admin'}
                       </span>
                     </div>
@@ -386,7 +386,7 @@ export default function AdminPanel() {
               )}
 
               <div className="flex gap-3 mt-6">
-                <Button onClick={handleSave} className="bg-red-600 text-white">Save</Button>
+                <Button onClick={handleSave} className="bg-blue-600 text-white">Save</Button>
                 <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
                 <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
               </div>

@@ -42,7 +42,7 @@ const Footer = () => {
         <div className="grid lg:grid-cols-5 gap-12 mb-12">
           <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="lg:col-span-2">
             <div className="flex items-center space-x-2 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
               </div>
               <span className="text-2xl font-bold gradient-text">{content.siteName}</span>
@@ -52,21 +52,21 @@ const Footer = () => {
             </p>
             <div className="space-y-3">
               <div className="flex items-center text-gray-300">
-                <Mail className="w-5 h-5 mr-3 text-purple-400" />
+                <Mail className="w-5 h-5 mr-3 text-blue-400" />
                 <span>{content.contact?.email || 'hello@example.com'}</span>
               </div>
               <div className="flex items-center text-gray-300">
-                <Phone className="w-5 h-5 mr-3 text-purple-400" />
+                <Phone className="w-5 h-5 mr-3 text-blue-400" />
                 <span>+1 (555) 123-4567</span>
               </div>
               <div className="flex items-center text-gray-300">
-                <MapPin className="w-5 h-5 mr-3 text-purple-400" />
+                <MapPin className="w-5 h-5 mr-3 text-blue-400" />
                 <span>{content.contact?.location || 'Remote / Worldwide'}</span>
               </div>
             </div>
             <div className="flex space-x-4 mt-6">
               {socialLinks.map((social) => (
-                <Button key={social.name} onClick={() => navigate('#/about')} variant="ghost" size="sm" className="w-10 h-10 p-0 text-gray-400 hover:text-white hover:bg-purple-600/20 rounded-full">
+                <Button key={social.name} onClick={() => navigate('#/about')} variant="ghost" size="sm" className="w-10 h-10 p-0 text-gray-400 hover:text-white hover:bg-blue-600/20 rounded-full">
                   <social.icon className="w-5 h-5" />
                 </Button>
               ))}
@@ -80,7 +80,7 @@ const Footer = () => {
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.label}>
-                  <button onClick={() => navigate(link.href)} className="text-gray-400 hover:text-purple-300 transition-colors text-left">
+                  <button onClick={() => navigate(link.href)} className="text-gray-400 hover:text-blue-300 transition-colors text-left">
                     {link.label}
                   </button>
                 </li>
@@ -93,7 +93,7 @@ const Footer = () => {
             <ul className="space-y-3">
               {footerLinks.resources.map((link) => (
                 <li key={link.label}>
-                  <button onClick={() => navigate(link.href)} className="text-gray-400 hover:text-purple-300 transition-colors text-left">
+                  <button onClick={() => navigate(link.href)} className="text-gray-400 hover:text-blue-300 transition-colors text-left">
                     {link.label}
                   </button>
                 </li>
@@ -107,8 +107,8 @@ const Footer = () => {
             <h3 className="text-2xl font-bold text-white mb-4">Mantente <span className="gradient-text">Actualizado</span></h3>
             <p className="text-gray-300 mb-6 max-w-2xl mx-auto">Recibe ideas y recursos de analítica directamente en tu bandeja de entrada.</p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input type="email" placeholder="tu@email.com" className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors" />
-              <Button onClick={() => navigate('#/newsletter')} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-semibold">Suscribirse</Button>
+              <input type="email" placeholder="tu@email.com" className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors" />
+              <Button onClick={() => navigate('#/newsletter')} className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-lg font-semibold">Suscribirse</Button>
             </div>
           </div>
         </motion.div>
@@ -118,7 +118,7 @@ const Footer = () => {
             <div className="text-gray-400 text-sm mb-4 md:mb-0">© {currentYear} {content.siteName}. Todos los derechos reservados.</div>
             <div className="flex flex-wrap gap-6 text-sm">
               {footerLinks.legal.map((link) => (
-                <button key={link} onClick={() => navigate('#/legal')} className="text-gray-400 hover:text-purple-300 transition-colors">
+                <button key={link} onClick={() => navigate('#/legal')} className="text-gray-400 hover:text-blue-300 transition-colors">
                   {link}
                 </button>
               ))}
@@ -126,7 +126,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <motion.button onClick={scrollToTop} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300 z-40">
+        <motion.button onClick={scrollToTop} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300 z-40">
           <ArrowUp className="w-6 h-6" />
         </motion.button>
       </div>

@@ -80,7 +80,7 @@ export default function Contact() {
                 <textarea className="w-full bg-transparent border border-white/20 rounded px-3 py-2" rows={6} name="message" value={formData.message} onChange={handleInputChange} placeholder="Cuéntanos cómo podemos ayudarte..." />
               </div>
               <div className="md:col-span-2 flex gap-4">
-                <Button type="submit" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                <Button type="submit" className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
                   Enviar Mensaje
                   <Send className="w-4 h-4 ml-2" />
                 </Button>

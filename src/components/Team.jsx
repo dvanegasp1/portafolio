@@ -58,9 +58,9 @@ const Team = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
-            <Users className="w-4 h-4 mr-2 text-purple-400" />
-            <span className="text-sm font-medium text-purple-300">Nuestro Equipo</span>
+          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full border border-blue-500/30 mb-6">
+            <Users className="w-4 h-4 mr-2 text-blue-400" />
+            <span className="text-sm font-medium text-blue-300">Nuestro Equipo</span>
           </div>
           
           <h2 className="text-4xl lg:text-6xl font-bold mb-6">
@@ -89,12 +89,12 @@ const Team = () => {
               <div className="glass-effect rounded-2xl p-6 h-full hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20">
                 {/* Profile Image */}
                 <div className="relative mb-6">
-                  <img 
-                    className="w-24 h-24 rounded-full mx-auto object-cover border-4 border-gradient-to-r from-purple-500 to-pink-500"
+                  <img
+                    className="w-24 h-24 rounded-full mx-auto object-cover border-4 border-gradient-to-r from-blue-500 to-cyan-500"
                     alt={`${member.name} - ${member.position} en Converse Advisory`}
                    src="https://images.unsplash.com/photo-1686434538579-4723a0cf2890" />
                   
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
                     <Award className="w-4 h-4 text-white" />
                   </div>
                 </div>
@@ -105,7 +105,7 @@ const Team = () => {
                     {member.name}
                   </h3>
                   
-                  <p className="text-purple-300 font-medium mb-2">
+                  <p className="text-blue-300 font-medium mb-2">
                     {member.position}
                   </p>
                   
@@ -121,7 +121,7 @@ const Team = () => {
                   {/* Achievements */}
                   <div className="space-y-1 mb-6">
                     {member.achievements.map((achievement, idx) => (
-                      <div key={idx} className="text-xs text-purple-300 bg-purple-500/10 rounded-full px-3 py-1 inline-block mr-1 mb-1">
+                      <div key={idx} className="text-xs text-blue-300 bg-blue-500/10 rounded-full px-3 py-1 inline-block mr-1 mb-1">
                         {achievement}
                       </div>
                     ))}
@@ -133,7 +133,7 @@ const Team = () => {
                       onClick={() => handleContactMember(member.name)}
                       size="sm"
                       variant="ghost"
-                      className="text-purple-300 hover:text-white hover:bg-purple-600/20 p-2"
+                      className="text-blue-300 hover:text-white hover:bg-blue-600/20 p-2"
                     >
                       <Linkedin className="w-4 h-4" />
                     </Button>
@@ -141,7 +141,7 @@ const Team = () => {
                       onClick={() => handleContactMember(member.name)}
                       size="sm"
                       variant="ghost"
-                      className="text-purple-300 hover:text-white hover:bg-purple-600/20 p-2"
+                      className="text-blue-300 hover:text-white hover:bg-blue-600/20 p-2"
                     >
                       <Mail className="w-4 h-4" />
                     </Button>
