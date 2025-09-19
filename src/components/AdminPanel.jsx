@@ -21,6 +21,7 @@ export default function AdminPanel() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [heroFile, setHeroFile] = useState(null);
   const [projectFiles, setProjectFiles] = useState({});
+  const [logoFile, setLogoFile] = useState(null);
 
   useEffect(() => setDraft(content), [content]);
 
@@ -94,10 +95,44 @@ export default function AdminPanel() {
     });
   };
 
-  // Upload hero image (if selected) then save changes (including Supabase sync)
+  // Upload hero/logo images (if selected) then save changes (including Supabase sync)
   const handleSave = async () => {
     try {
       let next = draft;
+      // Upload logo first so it’s available in the same save
+      if (logoFile) {
+        let setLocalUrl = false;
+        if (supabase) {
+          const key = `branding/logo/${Date.now()}-${logoFile.name}`.replace(/\s+/g, '-');
+          const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, logoFile, { upsert: true });
+          if (upErr) {
+            // Fallback to data URL for local preview
+            setLocalUrl = true;
+            toast({ title: 'No se pudo subir a Supabase', description: upErr.message + '. Se usará vista local temporal.', variant: 'default' });
+          } else {
+            next = { ...next, branding: { ...(next.branding||{}), logo_path: key } };
+            setDraft(next);
+          }
+        } else {
+          setLocalUrl = true;
+        }
+        if (setLocalUrl) {
+          const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          try {
+            const dataUrl = await fileToDataUrl(logoFile);
+            next = { ...next, branding: { ...(next.branding||{}), logo_path: String(dataUrl) } };
+            setDraft(next);
+          } catch (_) {
+            // ignore
+          }
+        }
+        setLogoFile(null);
+      }
       if (heroFile && supabase && session && isAdmin) {
         const key = `hero/${Date.now()}-${heroFile.name}`.replace(/\s+/g, '-');
         const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, heroFile, { upsert: true });
@@ -138,6 +173,7 @@ export default function AdminPanel() {
               <div className="text-sm uppercase tracking-wide text-gray-400 mb-3">Secciones</div>
               {[
                 ['general','General'],
+                ['branding','Branding'],
                 ['hero','Hero'],
                 ['visibility','Visibilidad'],
                 ['services','Services JSON'],
@@ -253,6 +289,50 @@ export default function AdminPanel() {
                         <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.hero.image_path}</div>
                       )}
                     </Field>
+                  </div>
+                </div>
+              )}
+
+              {tab === 'branding' && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Field label="Logo (sube una imagen para reemplazar)">
+                      <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setLogoFile(e.target.files?.[0] || null)} />
+                      {draft.branding?.logo_path && (
+                        <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.branding.logo_path}</div>
+                      )}
+                      <div className="text-[11px] text-gray-500 mt-1">Si no estás autenticado como Admin, se mostrará una vista local temporal que no persiste tras recargar.</div>
+                    </Field>
+                    <Field label="Logo URL (opcional)">
+                      <input
+                        placeholder="https://... o data:URI"
+                        className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                        value={draft.branding?.logo_path || ''}
+                        onChange={(e)=> setDraft(d=> ({...d, branding: { ...(d.branding||{}), logo_path: e.target.value || null }}))}
+                      />
+                      <div className="text-[11px] text-gray-500 mt-1">También puedes pegar un enlace directo al logo. Guardar lo sincroniza si estás en Admin.</div>
+                    </Field>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={()=> setDraft(d=> ({...d, branding: { ...(d.branding||{}), logo_path: null }}))}>Quitar logo</Button>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-300 mb-2">Vista previa</div>
+                    <div className="glass-effect rounded-xl p-4 border border-white/10">
+                      {(() => {
+                        const path = draft.branding?.logo_path;
+                        let url = null;
+                        if (path) {
+                          if (/^(https?:|data:|blob:)/i.test(path)) url = path;
+                          else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(path).data.publicUrl;
+                        }
+                        return url ? (
+                          <img src={url} alt="Logo preview" className="w-24 h-24 object-contain" />
+                        ) : (
+                          <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin logo</div>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </div>
               )}

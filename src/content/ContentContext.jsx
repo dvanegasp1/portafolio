@@ -6,6 +6,9 @@ import { supabase } from '@/lib/supabaseClient.js';
 const defaultContent = {
   siteName: 'Beiby Vanegaz',
   role: 'Data Analyst',
+  branding: {
+    logo_path: null,
+  },
   seo: {
     title: 'Beiby Vanegaz — Data Analytics Portfolio',
     description:
@@ -114,6 +117,9 @@ export function ContentProvider({ children }) {
     if (site) {
       result.siteName = site.site_name ?? result.siteName;
       result.role = site.role ?? result.role;
+      if (typeof site.logo_path !== 'undefined' && site.logo_path) {
+        result.branding = { ...(result.branding || {}), logo_path: site.logo_path };
+      }
     }
     // seo
     const { data: seo } = await supabase.from('seo').select('*').eq('site_id', 1).maybeSingle();
@@ -206,8 +212,19 @@ export function ContentProvider({ children }) {
     const c = payload ?? content;
     const errors = [];
     // Singletons
-    const s1 = await supabase.from('site_settings').upsert({ id: 1, site_name: c.siteName, role: c.role, updated_at: new Date().toISOString() }, { onConflict: 'id' });
-    if (s1.error) errors.push(s1.error);
+    const siteRow = { id: 1, site_name: c.siteName, role: c.role, updated_at: new Date().toISOString() };
+    const lp = c?.branding?.logo_path;
+    // Include only storage keys, skip data/http URLs to avoid noisy writes
+    const isStorageKey = lp && !/^https?:|^data:|^blob:/i.test(lp);
+    if (isStorageKey) siteRow.logo_path = lp;
+    const s1 = await supabase.from('site_settings').upsert(siteRow, { onConflict: 'id' });
+    if (s1.error) {
+      const msg = s1.error.message || '';
+      // Ignore missing column error gracefully; advise user to add column in UI
+      if (!/logo_path/.test(msg)) {
+        errors.push(s1.error);
+      }
+    }
     const s2 = await supabase.from('seo').upsert({ site_id: 1, title: c.seo?.title || '', description: c.seo?.description || '' }, { onConflict: 'site_id' });
     if (s2.error) errors.push(s2.error);
     const s3 = await supabase.from('hero').upsert({

@@ -2,12 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabaseClient.js';
 import { useContent } from '@/content/ContentContext.jsx';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { content } = useContent();
+  const logoUrl = (() => {
+    const lp = content?.branding?.logo_path;
+    if (!lp) return null;
+    if (/^(https?:|data:|blob:)/i.test(lp)) return lp;
+    if (supabase) return supabase.storage.from('portfolio-assets').getPublicUrl(lp).data.publicUrl;
+    return null;
+  })();
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 50);
@@ -48,9 +56,13 @@ export default function Header() {
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt={content.siteName + ' logo'} className="w-10 h-10 object-contain rounded" />
+            ) : (
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
+              </div>
+            )}
             <span className="text-2xl font-bold gradient-text">{content.siteName}</span>
           </motion.div>
 

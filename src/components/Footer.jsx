@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Linkedin, Twitter, Instagram, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabaseClient.js';
 import { useContent } from '@/content/ContentContext.jsx';
 
 const Footer = () => {
@@ -36,15 +37,26 @@ const Footer = () => {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const { content } = useContent();
+  const logoUrl = (() => {
+    const lp = content?.branding?.logo_path;
+    if (!lp) return null;
+    if (/^(https?:|data:|blob:)/i.test(lp)) return lp;
+    if (supabase) return supabase.storage.from('portfolio-assets').getPublicUrl(lp).data.publicUrl;
+    return null;
+  })();
   return (
     <footer className="relative bg-gradient-to-t from-black/50 to-transparent border-t border-white/10">
       <div className="container mx-auto px-6 py-16">
         <div className="grid lg:grid-cols-5 gap-12 mb-12">
           <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="lg:col-span-2">
             <div className="flex items-center space-x-2 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
-              </div>
+              {logoUrl ? (
+                <img src={logoUrl} alt={content.siteName + ' logo'} className="w-10 h-10 object-contain rounded" />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
+                </div>
+              )}
               <span className="text-2xl font-bold gradient-text">{content.siteName}</span>
             </div>
             <p className="text-gray-300 mb-6 leading-relaxed">
