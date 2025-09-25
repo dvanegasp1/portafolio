@@ -15,7 +15,8 @@ import AdminPanel from '@/components/AdminPanel.jsx';
 import SimplePage from '@/pages/SimplePage.jsx';
 
 function AppInner() {
-  const { content } = useContent();
+  const { content, supa } = useContent();
+  const loading = supa.loading;
   const getHash = () => (typeof window !== 'undefined' ? window.location.hash : '');
   const [hash, setHash] = useState(getHash());
   const isAdmin = hash === '#admin';
@@ -32,6 +33,9 @@ function AppInner() {
     return 'home';
   }, [hash, isAdmin]);
 
+  const seoTitle = content?.seo?.title || content?.siteName || '';
+  const seoDescription = content?.seo?.description || '';
+
   // Smooth-scroll to anchors when hash is a section id (e.g. #services)
   useEffect(() => {
     if (!hash || hash.startsWith('#/')) return;
@@ -44,11 +48,27 @@ function AppInner() {
     return () => clearTimeout(t);
   }, [hash]);
 
+  if (loading) {
+    return (
+      <>
+        <Helmet>
+          <title>Cargando...</title>
+          <meta name="description" content="Cargando contenido desde Supabase..." />
+        </Helmet>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex flex-col items-center justify-center text-blue-100">
+          <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-400 rounded-full animate-spin" />
+          <p className="mt-6 text-lg">Cargando contenido...</p>
+        </div>
+        <Toaster />
+      </>
+    );
+  }
+
   return (
     <>
       <Helmet>
-        <title>{content.seo.title}</title>
-        <meta name="description" content={content.seo.description} />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
       </Helmet>
       {isAdmin && <AdminPanel />}
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">

@@ -4,15 +4,14 @@ import { supabase } from '@/lib/supabaseClient.js';
 // Local storage is intentionally not used anymore; Supabase is the source of truth.
 
 const defaultContent = {
-  siteName: 'Beiby Vanegaz',
-  role: 'Data Analyst',
+  siteName: '',
+  role: '',
   branding: {
     logo_path: null,
   },
   seo: {
-    title: 'Beiby Vanegaz — Data Analytics Portfolio',
-    description:
-      'Data analyst transforming raw data into clear, actionable insights. Dashboards, ETL, and storytelling with data.',
+    title: '',
+    description: '',
   },
   visibility: {
     services: true,
@@ -21,90 +20,46 @@ const defaultContent = {
     team: false,
   },
   hero: {
-    badge: 'Data Analytics',
-    title: 'Turning Data Into Decisions',
-    subtitle:
-      'I help teams uncover insights and drive impact with clean data, clear dashboards, and compelling stories.',
-    primaryCta: { label: 'View Projects', href: '#projects' },
-    secondaryCta: { label: 'Contact Me', href: '#contact' },
-  },
-  about: {
-    heading: "Hola, soy Deivy Andrés Vanegas",
-    description:
-      "Hola, soy Deivy Andrés Vanegas, un apasionado por los datos, la tecnología y el conocimiento. A lo largo de mi vida profesional he aprendido que detrás de cada número hay una historia, y detrás de cada historia, una oportunidad para mejorar.\n\nMi camino comenzó en el servicio público, donde durante más de 15 años en la Policía Nacional de Colombia lideré procesos de análisis, gestión del conocimiento y cultura institucional. Esa experiencia me enseñó el valor de la información bien utilizada: puede salvar vidas, optimizar recursos y transformar organizaciones.\n\nHoy, como Magíster en Analítica de Datos, combino mi formación en administración, seguridad vial y desarrollo de sistemas para ofrecer soluciones que van más allá de los gráficos y algoritmos. Trabajo con herramientas como Python, R, Power BI, KNIME y Neo4j para convertir datos en decisiones inteligentes, automatizar procesos y construir modelos predictivos que anticipan el futuro.\n\nCreo en la ética, la innovación y el impacto social. Cada proyecto que emprendo busca generar valor real, empoderar a las personas y construir un país más eficiente, justo y conectado.\n\nSi tú también crees que los datos pueden cambiar el mundo, estás en el lugar correcto.",
-    highlights: [
-      'ETL, data modeling, KPI design',
-      'A/B testing, forecasting, cohort analysis',
-    ],
+    badge: '',
+    title: '',
+    subtitle: '',
+    primaryCta: { label: '', href: '' },
+    secondaryCta: { label: '', href: '' },
     image_path: null,
   },
-  services: [
-    {
-      icon: 'BarChart3',
-      title: 'Dashboarding & BI',
-      description: 'Design and build dashboards that surface the metrics that matter.'
-    },
-    {
-      icon: 'Database',
-      title: 'Data Cleaning & Modeling',
-      description: 'From messy CSVs to reliable datasets ready for analysis.'
-    },
-    {
-      icon: 'LineChart',
-      title: 'Analysis & Insights',
-      description: 'Exploratory analysis, cohorts, funnels, segmentation, and forecasting.'
-    },
-    {
-      icon: 'Workflow',
-      title: 'Automation & ETL',
-      description: 'Automated pipelines that keep data fresh and trustworthy.'
-    },
-  ],
-  projects: [
-    {
-      title: 'E-commerce Sales Dashboard',
-      description:
-        'Built a Power BI dashboard tracking revenue, CAC, conversion, and LTV with cohort analysis and forecasting.',
-      tags: ['Power BI', 'SQL', 'Cohorts', 'Forecasting'],
-      link: '#contact',
-    },
-    {
-      title: 'Churn Prediction',
-      description:
-        'Modeled churn risk and identified key drivers using Python and logistic regression to improve retention.',
-      tags: ['Python', 'pandas', 'LogReg', 'Retention'],
-      link: '#contact',
-    },
-    {
-      title: 'Marketing Attribution',
-      description:
-        'Combined ad platform data to attribute revenue and optimize spend across channels.',
-      tags: ['SQL', 'ETL', 'Attribution'],
-      link: '#contact',
-    },
-  ],
-  contact: {
-    email: 'hello@example.com',
-    location: 'Remote / Worldwide',
-    scheduleUrl: '',
+  servicesHeading: '',
+  servicesSubheading: '',
+  projectsHeading: '',
+  projectsSubheading: '',
+  teamHeading: '',
+  teamSubheading: '',
+  testimonialsHeading: '',
+  testimonialsSubheading: '',
+  about: {
+    heading: '',
+    description: '',
+    highlights: [],
+    image_path: null,
   },
-  whyUs: [
-    { icon: 'Users', title: 'Equipo Experto', subtitle: 'Consultores Certificados' },
-    { icon: 'Target', title: 'Resultados Garantizados', subtitle: 'ROI Comprobado' },
-  ],
-};
+  services: [],
+  projects: [],
+  teamMembers: [],
+  testimonials: [],
 
+  contactHeading: '',
+  whyUs: [],
+};
 const ContentContext = createContext({
   content: defaultContent,
   setContent: () => {},
   resetContent: () => {},
   saveToSupabase: async () => {},
-  supa: { available: false, loading: false, error: null },
+  supa: { available: false, loading: true, error: null },
 });
 
 export function ContentProvider({ children }) {
   const [content, setContent] = useState(defaultContent);
-  const [supaState, setSupaState] = useState({ available: !!supabase, loading: false, error: null });
+  const [supaState, setSupaState] = useState({ available: !!supabase, loading: true, error: null });
 
   // No localStorage persistence; Supabase is authoritative.
 
@@ -173,7 +128,7 @@ export function ContentProvider({ children }) {
     }
     // contact
     const { data: contact } = await supabase.from('contact').select('*').eq('site_id', 1).maybeSingle();
-    if (contact) result.contact = { email: contact.email || '', location: contact.location || '', scheduleUrl: contact.schedule_url || '' };
+    if (contact) result.contact = { email: contact.email || '', location: contact.location || '', scheduleUrl: contact.schedule_url || '', phone: contact.phone || '', hours: contact.hours || '', note: contact.note || '' };
     // visibility
     const { data: vis } = await supabase.from('visibility').select('*').eq('site_id', 1).maybeSingle();
     if (vis) result.visibility = { services: !!vis.services, projects: !!vis.projects, testimonials: !!vis.testimonials, team: !!vis.team };
@@ -184,6 +139,45 @@ export function ContentProvider({ children }) {
       .eq('site_id', 1)
       .order('sort_order', { ascending: true });
     if (why) result.whyUs = why.map((w) => ({ icon: w.icon, title: w.title, subtitle: w.subtitle }));
+    const { data: teamMembers, error: teamErr } = await supabase
+      .from('team_members')
+      .select('id,name,position,specialization,experience,description,achievements,avatar_path,sort_order')
+      .eq('site_id', 1)
+      .order('sort_order', { ascending: true });
+    if (!teamErr && teamMembers) {
+      result.teamMembers = teamMembers.map((member) => ({
+        name: member.name,
+        position: member.position,
+        specialization: member.specialization,
+        experience: member.experience,
+        description: member.description,
+        achievements: Array.isArray(member.achievements)
+          ? member.achievements
+          : (typeof member.achievements === 'string'
+              ? member.achievements.split('|').map((s) => s.trim()).filter(Boolean)
+              : []),
+        avatar_path: member.avatar_path || null,
+        id: member.id || null,
+      }));
+    }
+    const { data: testimonials, error: testimonialsErr } = await supabase
+      .from('testimonials')
+      .select('id,name,position,company,rating,text,result,industry,avatar_path,sort_order')
+      .eq('site_id', 1)
+      .order('sort_order', { ascending: true });
+    if (!testimonialsErr && testimonials) {
+      result.testimonials = testimonials.map((t) => ({
+        name: t.name,
+        position: t.position,
+        company: t.company,
+        rating: typeof t.rating === 'number' ? t.rating : Number.parseInt(t.rating, 10) || 0,
+        text: t.text,
+        result: t.result,
+        industry: t.industry,
+        avatar_path: t.avatar_path || null,
+        id: t.id || null,
+      }));
+    }
     return result;
   };
 
@@ -191,7 +185,10 @@ export function ContentProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      if (!supabase) return; // not configured
+      if (!supabase) {
+        setSupaState((s) => ({ ...s, loading: false }));
+        return;
+      } // not configurado
       setSupaState((s) => ({ ...s, loading: true, error: null }));
       try {
         const merged = await fetchNormalized();
@@ -307,3 +304,17 @@ export function ContentProvider({ children }) {
 export function useContent() {
   return useContext(ContentContext);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

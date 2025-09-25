@@ -27,6 +27,7 @@ export default function Header() {
     { name: 'Home', href: '#home', show: true },
     { name: 'Services', href: '#services', show: content.visibility.services },
     { name: 'Projects', href: '#projects', show: content.visibility.projects },
+    { name: 'Blog', href: '#/blog', show: true },
     { name: 'Sobre Mi', href: '#about', show: true },
     { name: 'Team', href: '#team', show: content.visibility.team },
     { name: 'Testimonials', href: '#testimonials', show: content.visibility.testimonials },
@@ -34,11 +35,21 @@ export default function Header() {
   ].filter(i => i.show);
 
   const handleNavClick = (href) => {
-    const element = document.querySelector(href);
+    if (!href) return;
+    if (href.startsWith('#/')) {
+      window.location.hash = href;
+      setIsMenuOpen(false);
+      return;
+    }
+    let element = null;
+    try {
+      element = document.querySelector(href);
+    } catch (error) {
+      element = null;
+    }
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     } else {
-      // Navigate home with anchor so App can handle scroll after render
       window.location.hash = href;
     }
     setIsMenuOpen(false);
@@ -125,3 +136,4 @@ export default function Header() {
     </motion.header>
   );
 }
+

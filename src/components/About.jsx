@@ -1,14 +1,43 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Award, CheckCircle, Users, Target } from 'lucide-react';
+import { Award, CheckCircle } from 'lucide-react';
 import { useContent } from '@/content/ContentContext.jsx';
 import { supabase } from '@/lib/supabaseClient.js';
 
-const iconMap = { Users, Target };
+const resolveStorageUrl = (storagePath) => {
+  if (!storagePath) return null;
+  if (/^(https?:|data:|blob:)/i.test(storagePath)) return storagePath;
+  if (!supabase) return null;
+  const { data } = supabase.storage.from('portfolio-assets').getPublicUrl(storagePath);
+  return data?.publicUrl || null;
+};
+
+const SkeletonBlock = ({ className }) => (
+  <div className={`animate-pulse rounded bg-white/10 ${className}`} />
+);
 
 export default function About() {
-   const { content } = useContent();
-   const { heading, description, highlights, image_path } = content.about;
+  const { content, supa } = useContent();
+  const loading = supa.loading;
+  const about = content?.about ?? {};
+  const highlights = Array.isArray(about.highlights) ? about.highlights : [];
+  const imageUrl = resolveStorageUrl(about.image_path);
+  const primaryHighlight = highlights[0] || content?.role || '';
+  const secondaryHighlight = highlights[1] || '';
+
+  const renderHighlight = (value, index) => (
+    <motion.div
+      key={value || index}
+      initial={{ opacity: 0, x: -20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      viewport={{ once: true }}
+      className="flex items-center"
+    >
+      <CheckCircle className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+      <span className="text-gray-300">{value}</span>
+    </motion.div>
+  );
 
   return (
     <section id="about" className="relative z-20 overflow-hidden scroll-mt-40 -mt-20 md:-mt-28 pt-6 md:pt-8 pb-24">
@@ -19,6 +48,7 @@ export default function About() {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
+            className="order-1 lg:order-2"
           >
             <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
               <Award className="w-4 h-4 mr-2 text-purple-400" />
@@ -26,25 +56,17 @@ export default function About() {
             </div>
 
             <h2 className="text-4xl lg:text-6xl font-bold mb-6">
-              {heading}
+              {loading ? <SkeletonBlock className="h-10 w-3/4" /> : about.heading}
             </h2>
 
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">{description}</p>
+            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+              {loading ? <SkeletonBlock className="h-5 w-full" /> : about.description}
+            </p>
 
             <div className="space-y-4 mb-8">
-              {highlights.map((value, index) => (
-                <motion.div
-                  key={value}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="flex items-center"
-                >
-                  <CheckCircle className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
-                  <span className="text-gray-300">{value}</span>
-                </motion.div>
-              ))}
+              {loading
+                ? [0, 1, 2].map((idx) => <SkeletonBlock key={idx} className="h-4 w-3/4" />)
+                : highlights.map((value, index) => renderHighlight(value, index))}
             </div>
           </motion.div>
 
@@ -53,55 +75,47 @@ export default function About() {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="relative"
+            className="order-2 lg:order-1 relative"
           >
-            <div className="relative">
-              <img
-                className="w-full h-auto rounded-2xl shadow-2xl"
-                alt="Data visuals and analytics dashboard"
-                src={(() => {
-                  let url = null;
-                  if (image_path) {
-                    if (/^(https?:|data:|blob:)/i.test(image_path)) url = image_path;
-                    else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(image_path).data.publicUrl;
-                  }
-                  return url || "https://images.unsplash.com/photo-1552581234-26160f608093";
-                })()}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent rounded-2xl" />
+            <div className="relative group md:pl-6">
+              <div className="absolute -inset-4 rounded-[32px] bg-gradient-to-br from-purple-500/40 via-blue-500/30 to-cyan-500/40 opacity-60 blur-3xl group-hover:opacity-90 transition duration-500" />
+              <div className="absolute -inset-[3px] rounded-[24px] bg-white/10 group-hover:bg-white/15 transition duration-500" />
+              <div className="relative rounded-[20px] overflow-hidden border border-white/5 group-hover:border-white/20 transition duration-500 shadow-xl">
+                {imageUrl ? (
+                  <img
+                    className="w-full h-full object-cover transition duration-700 ease-out group-hover:scale-105 group-hover:rotate-[0.5deg]"
+                    alt={about.heading || 'About section visual'}
+                    src={imageUrl}
+                  />
+                ) : (
+                  <div className="w-full aspect-[4/3] bg-gradient-to-br from-purple-900/70 to-blue-900/40 flex items-center justify-center">
+                    {loading ? <SkeletonBlock className="h-10 w-24" /> : <span className="text-white/60 tracking-[0.3em] uppercase text-[11px]">Imagen pendiente</span>}
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+              </div>
 
-              {/* Floating overlay cards (restored style) */}
-              {(() => { const Icon = iconMap[content.whyUs?.[0]?.icon] || Users; return (
-                <div className="absolute -top-6 -left-6 w-64">
-                  <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mr-3">
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-white font-semibold leading-tight">{content.whyUs?.[0]?.title || 'Equipo Experto'}</div>
-                        <div className="text-gray-300 text-sm">{content.whyUs?.[0]?.subtitle || 'Consultores Certificados'}</div>
-                      </div>
-                    </div>
+              <div className="absolute -top-4 -left-4 hidden lg:block">
+                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-purple-500/30 via-blue-500/20 to-transparent blur-xl" />
+              </div>
+
+              {loading ? (
+                <div className="hidden lg:block absolute -bottom-6 -right-6">
+                  <div className="glass-effect rounded-xl px-3 py-2.5 border border-white/10 shadow-lg backdrop-blur-xl">
+                    <SkeletonBlock className="h-3 w-16 mb-2" />
+                    <SkeletonBlock className="h-4 w-14" />
+                    <SkeletonBlock className="h-3 w-16 mt-1" />
                   </div>
                 </div>
-              ); })()}
-
-              {(() => { const Icon = iconMap[content.whyUs?.[1]?.icon] || Target; return (
-                <div className="absolute -bottom-6 -right-6 w-72">
-                  <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center mr-3">
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-white font-semibold leading-tight">{content.whyUs?.[1]?.title || 'Resultados Garantizados'}</div>
-                        <div className="text-gray-300 text-sm">{content.whyUs?.[1]?.subtitle || 'ROI Comprobado'}</div>
-                      </div>
-                    </div>
+              ) : (
+                <div className="hidden lg:block absolute -bottom-6 -right-6">
+                  <div className="glass-effect rounded-xl px-3 py-2.5 border border-white/10 shadow-lg backdrop-blur-xl">
+                    <p className="text-[9px] tracking-[0.35em] uppercase text-blue-200/80">Insights</p>
+                    <p className="text-[11px] font-semibold text-white mt-1.5 leading-tight">{primaryHighlight}</p>
+                    {secondaryHighlight && <p className="text-[10px] text-gray-300 mt-1">{secondaryHighlight}</p>}
                   </div>
                 </div>
-              ); })()}
+              )}
             </div>
           </motion.div>
         </div>

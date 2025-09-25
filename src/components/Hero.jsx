@@ -7,28 +7,107 @@ import { Button } from '@/components/ui/button';
 
 const iconMap = { Users, Target };
 
+const resolveStorageUrl = (storagePath) => {
+  if (!storagePath) return null;
+  if (/^(https?:|data:|blob:)/i.test(storagePath)) return storagePath;
+  if (!supabase) return null;
+  const { data } = supabase.storage.from('portfolio-assets').getPublicUrl(storagePath);
+  return data?.publicUrl || null;
+};
+
+const SkeletonBlock = ({ className }) => (
+  <div className={`animate-pulse rounded bg-white/10 ${className}`} />
+);
+
 export default function Hero() {
-  const { content } = useContent();
+  const { content, supa } = useContent();
+  const loading = supa.loading;
+  const hero = content?.hero ?? {};
+  const badge = hero.badge?.trim() || content?.role?.trim() || '';
+  const title = hero.title?.trim() || content?.siteName?.trim() || '';
+  const subtitle = hero.subtitle?.trim() || '';
+  const primaryCta = hero.primaryCta;
+  const secondaryCta = hero.secondaryCta;
+  const heroImage = resolveStorageUrl(hero.image_path);
+  const whyCards = Array.isArray(content?.whyUs) ? content.whyUs : [];
 
   const scrollTo = (selector) => {
+    if (!selector || typeof window === 'undefined') return;
+    if (!selector.startsWith('#')) {
+      window.open(selector, '_blank', 'noopener');
+      return;
+    }
     const el = document.querySelector(selector);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const badge = content.hero?.badge || content.role || 'Data Analytics';
-  const title = content.hero?.title || 'Transformo datos en decisiones estratégicas';
-  const subtitle = content.hero?.subtitle || 'Magíster en Analítica de Datos con experiencia en inteligencia artificial, visualización y modelos predictivos';
-  const primaryHref = content.hero?.primaryCta?.href || '#contact';
-  const primaryLabel = content.hero?.primaryCta?.label || 'Solicita una asesoría';
-  const secondaryHref = content.hero?.secondaryCta?.href || '#contact';
-  const secondaryLabel = content.hero?.secondaryCta?.label || 'Conversemos sobre tu proyecto';
-  const heroImage = content.hero?.image_path && supabase
-    ? supabase.storage.from('portfolio-assets').getPublicUrl(content.hero.image_path).data.publicUrl
-    : 'https://images.unsplash.com/photo-1552581234-26160f608093';
+  const renderCtaButton = (cta, type) => {
+    if (!cta?.label) return null;
+    const href = cta.href || '';
+    const handleClick = () => scrollTo(href);
+    if (type === 'primary') {
+      return (
+        <Button
+          onClick={handleClick}
+          size="lg"
+          disabled={!href}
+          className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-4 rounded-full font-semibold text-lg group"
+        >
+          {cta.label}
+          <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+        </Button>
+      );
+    }
+    return (
+      <Button
+        onClick={handleClick}
+        variant="outline"
+        size="lg"
+        disabled={!href}
+        className="border-2 border-blue-500 text-blue-300 hover:bg-blue-500/10 px-8 py-4 rounded-full font-semibold text-lg"
+      >
+        {cta.label}
+      </Button>
+    );
+  };
+
+  const renderWhyCard = (item, fallbackIcon, positionClass) => {
+    if (loading) {
+      return (
+        <div className={`absolute ${positionClass} w-64`}>
+          <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
+            <div className="flex items-center space-x-3">
+              <SkeletonBlock className="w-10 h-10" />
+              <div className="flex-1 space-y-2">
+                <SkeletonBlock className="h-4 w-32" />
+                <SkeletonBlock className="h-3 w-24" />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (!item) return null;
+    const Icon = iconMap[item.icon] || fallbackIcon;
+    return (
+      <div className={`absolute ${positionClass} w-64`}>
+        <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
+          <div className="flex items-center">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mr-3">
+              <Icon className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="text-white font-semibold leading-tight">{item.title}</div>
+              <div className="text-gray-300 text-sm">{item.subtitle}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background circles */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating-animation" />
         <div className="absolute top-40 right-10 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating-animation" style={{ animationDelay: '2s' }} />
@@ -37,73 +116,58 @@ export default function Hero() {
 
       <div className="container mx-auto px-6 py-20 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left content wired to Supabase */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             className="text-center lg:text-left"
           >
-            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full border border-blue-500/30 mb-6">
-              <span className="text-sm font-medium text-blue-300">{badge}</span>
-            </div>
+            {(loading || badge) && (
+              <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full border border-blue-500/30 mb-6">
+                {loading ? <SkeletonBlock className="h-4 w-24" /> : <span className="text-sm font-medium text-blue-300">{badge}</span>}
+              </div>
+            )}
 
             <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
-              <span className="gradient-text block">{title}</span>
+              {loading ? (
+                <span className="block space-y-3">
+                  <SkeletonBlock className="h-12 w-3/4 mx-auto lg:mx-0" />
+                  <SkeletonBlock className="h-12 w-1/2 mx-auto lg:mx-0" />
+                </span>
+              ) : (
+                <span className="gradient-text block">{title}</span>
+              )}
             </h1>
 
             <p className="text-xl text-gray-300 mb-8 max-w-2xl">
-              {subtitle}
+              {loading ? <SkeletonBlock className="h-5 w-full" /> : subtitle}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button onClick={() => scrollTo(primaryHref)} size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-4 rounded-full font-semibold text-lg pulse-glow group">
-                {primaryLabel}
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button onClick={() => scrollTo(secondaryHref)} variant="outline" size="lg" className="border-2 border-blue-500 text-blue-300 hover:bg-blue-500/10 px-8 py-4 rounded-full font-semibold text-lg">
-                {secondaryLabel}
-              </Button>
+              {loading ? (
+                <>
+                  <SkeletonBlock className="h-12 w-40" />
+                  <SkeletonBlock className="h-12 w-40" />
+                </>
+              ) : (
+                <>
+                  {renderCtaButton(primaryCta, 'primary')}
+                  {renderCtaButton(secondaryCta, 'secondary')}
+                </>
+              )}
             </div>
 
             <div className="mt-12 pt-8 border-t border-blue-500/30" />
           </motion.div>
 
-          {/* Right visual with overlay cards (wired to whyUs) */}
           <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="relative">
-            <img className="w-full h-auto rounded-2xl shadow-2xl" alt="Hero" src={heroImage} />
-            {/* Top-left overlay */}
-            {(() => { const Icon = iconMap[content.whyUs?.[0]?.icon] || Users; return (
-            <div className="absolute -top-6 -left-6 w-64">
-              <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mr-3">
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-white font-semibold leading-tight">{content.whyUs?.[0]?.title || 'Equipo Experto'}</div>
-                    <div className="text-gray-300 text-sm">{content.whyUs?.[0]?.subtitle || 'Consultores Certificados'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            ); })()}
-            {/* Bottom-right overlay */}
-            {(() => { const Icon = iconMap[content.whyUs?.[1]?.icon] || Target; return (
-            <div className="absolute -bottom-6 -right-6 w-72">
-              <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center mr-3">
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-white font-semibold leading-tight">{content.whyUs?.[1]?.title || 'Resultados Garantizados'}</div>
-                    <div className="text-gray-300 text-sm">{content.whyUs?.[1]?.subtitle || 'ROI Comprobado'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            ); })()}
+            {heroImage ? (
+              <img className="w-full h-auto rounded-2xl shadow-2xl object-cover" alt="Hero" src={heroImage} />
+            ) : (
+              <div className="w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-blue-900/60 to-cyan-900/40 border border-blue-500/20 shadow-2xl" />
+            )}
+            {renderWhyCard(whyCards[0], Users, '-top-6 -left-6')}
+            {renderWhyCard(whyCards[1], Target, '-bottom-6 -right-6')}
           </motion.div>
         </div>
       </div>
