@@ -20,7 +20,7 @@ export default function About() {
   const { content, supa } = useContent();
   const loading = supa.loading;
   const about = content?.about ?? {};
-  const highlights = Array.isArray(about.highlights) ? about.highlights : [];
+  const highlights = Array.isArray(about.highlights) ? about.highlights.filter(item => !['SQL', 'Python (pandas)', 'Sheets', 'Power BI', 'Tableau', 'Looker Studio'].includes(item)) : [];
   const imageUrl = resolveStorageUrl(about.image_path);
   const primaryHighlight = highlights[0] || content?.role || '';
   const secondaryHighlight = highlights[1] || '';
@@ -63,11 +63,7 @@ export default function About() {
               {loading ? <SkeletonBlock className="h-5 w-full" /> : about.description}
             </p>
 
-            <div className="space-y-4 mb-8">
-              {loading
-                ? [0, 1, 2].map((idx) => <SkeletonBlock key={idx} className="h-4 w-3/4" />)
-                : highlights.map((value, index) => renderHighlight(value, index))}
-            </div>
+            
           </motion.div>
 
           <motion.div
@@ -78,12 +74,11 @@ export default function About() {
             className="order-2 lg:order-1 relative"
           >
             <div className="relative group md:pl-6">
-              <div className="absolute -inset-4 rounded-[32px] bg-gradient-to-br from-purple-500/40 via-blue-500/30 to-cyan-500/40 opacity-60 blur-3xl group-hover:opacity-90 transition duration-500" />
               <div className="absolute -inset-[3px] rounded-[24px] bg-white/10 group-hover:bg-white/15 transition duration-500" />
-              <div className="relative rounded-[20px] overflow-hidden border border-white/5 group-hover:border-white/20 transition duration-500 shadow-xl">
+              <div className="relative rounded-[20px] overflow-hidden border border-white/5 group-hover:border-white/20 transition duration-500 shadow-xl flex items-center justify-center">
                 {imageUrl ? (
                   <img
-                    className="w-full h-full object-cover transition duration-700 ease-out group-hover:scale-105 group-hover:rotate-[0.5deg]"
+                    className="w-3/4 h-3/4 object-cover rounded-[20px] transition duration-700 ease-out group-hover:scale-105 group-hover:rotate-[0.5deg]"
                     alt={about.heading || 'About section visual'}
                     src={imageUrl}
                   />

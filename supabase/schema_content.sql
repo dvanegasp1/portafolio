@@ -162,7 +162,7 @@ create table if not exists about_highlights (
 alter table about_highlights enable row level security;
 insert into about_highlights (site_id, value, sort_order)
 values
-  (1, 'SQL, Python (pandas), Sheets', 10),
+  (1, 'kanime', 10),
   (1, 'Power BI, Tableau, Looker Studio', 20)
 on conflict do nothing;
 
