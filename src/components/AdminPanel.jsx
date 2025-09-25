@@ -24,6 +24,10 @@ export default function AdminPanel() {
   const [logoFile, setLogoFile] = useState(null);
   const [aboutFile, setAboutFile] = useState(null);
   const [serviceFiles, setServiceFiles] = useState({});
+  const [eduFiles, setEduFiles] = useState({});
+  const [expFiles, setExpFiles] = useState({});
+  const [blogFiles, setBlogFiles] = useState({});
+  const [removedBlogSlugs, setRemovedBlogSlugs] = useState([]);
 
   useEffect(() => setDraft(content), [content]);
 
@@ -79,6 +83,47 @@ export default function AdminPanel() {
       }
     } catch (e) {
       toast({ title: 'Error', description: 'No se pudieron guardar los cambios.', variant: 'destructive' });
+    }
+  };
+  
+  // Save current tab only: run uploads via handleSave, then scoped DB write
+  const handleSaveScoped = async () => {
+    await handleSave();
+    try {
+      if (supabase && session && isAdmin) {
+        const scopesByTab = {
+          general: ['site','seo','contact'],
+          branding: ['site'],
+          hero: ['hero'],
+          about: ['about'],
+          services: ['services'],
+          projects: ['projects'],
+          whyus: ['why_us'],
+          visibility: ['visibility'],
+          contact: ['contact'],
+          resume: ['education','experience','visibility','resume'],
+          blog: ['blog'],
+        };
+        const scopes = scopesByTab[tab] || ['all'];
+        const { error } = await saveToSupabase(draft, scopes);
+        if (error) {
+          toast({ title: 'Sync parcial falló', description: error.message || String(error), variant: 'destructive' });
+        } else {
+          toast({ title: 'Guardado', description: 'Se guardó solo la sección actual.' });
+          if (tab === 'blog' && removedBlogSlugs.length) {
+            try {
+              const { error: delErr } = await supabase.from('blog_posts').delete().eq('site_id', 1).in('slug', removedBlogSlugs);
+              if (delErr) {
+                toast({ title: 'No se pudieron eliminar algunas entradas', description: delErr.message, variant: 'destructive' });
+              } else {
+                setRemovedBlogSlugs([]);
+              }
+            } catch (_) {}
+          }
+        }
+      }
+    } catch (e) {
+      // already notified by inner calls
     }
   };
 
@@ -173,19 +218,8 @@ export default function AdminPanel() {
         setServiceFiles({});
       }
       setContent(next);
-      if (supabase) {
-        if (session && isAdmin) {
-          const { error } = await saveToSupabase(next);
-          if (error) toast({ title: 'Guardado local', description: 'Sincronización con Supabase falló: ' + error.message, variant: 'default' });
-          else toast({ title: 'Guardado', description: 'Cambios aplicados y sincronizados con Supabase.' });
-        } else if (session && !isAdmin) {
-          toast({ title: 'Guardado local', description: 'Tu sesión no pertenece al grupo Admin. Pide acceso para sincronizar.', variant: 'default' });
-        } else {
-          toast({ title: 'Guardado local', description: 'Inicia sesión para sincronizar con Supabase.', variant: 'default' });
-        }
-      } else {
-        toast({ title: 'Guardado', description: 'Cambios aplicados localmente.' });
-      }
+      // Solo aplicar localmente; requerir botón "Guardar" para sincronizar con Supabase.
+      toast({ title: 'Cambios preparados', description: 'Los cambios se aplicaron localmente. Pulsa "Guardar" para sincronizar con Supabase.' });
     } catch (e) {
       toast({ title: 'Error', description: 'No se pudieron guardar los cambios.', variant: 'destructive' });
     }
@@ -205,9 +239,11 @@ export default function AdminPanel() {
                 ['hero','Hero'],
                 ['about','Sobre Mi'],
                 ['visibility','Visibilidad'],
+                ['resume','Resume'],
                 ['services','Services JSON'],
                 ['projects','Projects JSON'],
                 ['whyus','Why Us JSON'],
+                ['blog','Blog'],
                 ['contact','Contacto'],
               ].map(([key,label]) => (
                 <button key={key} onClick={() => setTab(key)} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab===key? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{label}</button>
@@ -292,6 +328,102 @@ export default function AdminPanel() {
                 </div>
               )}
 
+              {tab === 'resume' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Resume</h3>
+                  <div className="mb-6">
+                    <Field label="Summary (intro text shown above Education/Experience)">
+                      <textarea
+                        rows={4}
+                        className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                        value={draft.resumeSummary || ''}
+                        onChange={(e)=> onChange('resumeSummary', e.target.value)}
+                        placeholder="Brief overview of your background, focus and strengths."
+                      />
+                    </Field>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold mb-3">Education</h4>
+                      <div className="space-y-4">
+                        {(draft.education||[]).map((item, i) => (
+                          <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                            <Field label="Institution"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.institution||''} onChange={(e)=>{
+                              const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], institution:v}; return { ...d, education:arr }; });
+                            }} /></Field>
+                            <Field label="Program"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.program||''} onChange={(e)=>{
+                              const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], program:v}; return { ...d, education:arr }; });
+                            }} /></Field>
+                            <div className="grid grid-cols-3 gap-2">
+                              <Field label="Location"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.location||''} onChange={(e)=>{
+                                const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], location:v}; return { ...d, education:arr }; });
+                              }} /></Field>
+                              <Field label="Start"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.start||''} onChange={(e)=>{
+                                const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], start:v}; return { ...d, education:arr }; });
+                              }} /></Field>
+                              <Field label="End"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.end||''} onChange={(e)=>{
+                                const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], end:v}; return { ...d, education:arr }; });
+                              }} /></Field>
+                            </div>
+                            <Field label="Description"><textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.description||''} onChange={(e)=>{
+                              const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], description:v}; return { ...d, education:arr }; });
+                            }} /></Field>
+                            <Field label="Achievements (one per line)"><textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(item.achievements||[]).join('\n')} onChange={(e)=>{
+                              const list=e.target.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], achievements:list}; return { ...d, education:arr }; });
+                            }} /></Field>
+                            <Field label="Icon (upload to replace)"><input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setEduFiles((m)=>({ ...m, [i]: e.target.files?.[0]||null }))} /></Field>
+                            <div className="text-right mt-2">
+                              <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, education: (d.education||[]).filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3">
+                        <Button variant="ghost" onClick={()=> setDraft(d=> ({ ...d, education:[...(d.education||[]), { institution:'', program:'', location:'', start:'', end:'', description:'', achievements:[], icon_path:null }] }))}>Add Education</Button>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-3">Experience</h4>
+                      <div className="space-y-4">
+                        {(draft.experience||[]).map((item, i) => (
+                          <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                            <Field label="Company"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.company||''} onChange={(e)=>{
+                              const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], company:v}; return { ...d, experience:arr }; });
+                            }} /></Field>
+                            <Field label="Role"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.role||''} onChange={(e)=>{
+                              const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], role:v}; return { ...d, experience:arr }; });
+                            }} /></Field>
+                            <div className="grid grid-cols-3 gap-2">
+                              <Field label="Location"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.location||''} onChange={(e)=>{
+                                const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], location:v}; return { ...d, experience:arr }; });
+                              }} /></Field>
+                              <Field label="Start"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.start||''} onChange={(e)=>{
+                                const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], start:v}; return { ...d, experience:arr }; });
+                              }} /></Field>
+                              <Field label="End"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.end||''} onChange={(e)=>{
+                                const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], end:v}; return { ...d, experience:arr }; });
+                              }} /></Field>
+                            </div>
+                            <Field label="Description"><textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.description||''} onChange={(e)=>{
+                              const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], description:v}; return { ...d, experience:arr }; });
+                            }} /></Field>
+                            <Field label="Achievements (one per line)"><textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(item.achievements||[]).join('\n')} onChange={(e)=>{
+                              const list=e.target.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], achievements:list}; return { ...d, experience:arr }; });
+                            }} /></Field>
+                            <Field label="Icon (upload to replace)"><input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setExpFiles((m)=>({ ...m, [i]: e.target.files?.[0]||null }))} /></Field>
+                            <div className="text-right mt-2">
+                              <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, experience: (d.experience||[]).filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3">
+                        <Button variant="ghost" onClick={()=> setDraft(d=> ({ ...d, experience:[...(d.experience||[]), { company:'', role:'', location:'', start:'', end:'', description:'', achievements:[], icon_path:null }] }))}>Add Experience</Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {tab === 'hero' && (
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
@@ -409,6 +541,7 @@ export default function AdminPanel() {
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.projects} onChange={(e)=>onChange('visibility.projects', e.target.checked)} /> <span>Show Projects</span></label>
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.testimonials} onChange={(e)=>onChange('visibility.testimonials', e.target.checked)} /> <span>Show Testimonials</span></label>
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.team} onChange={(e)=>onChange('visibility.team', e.target.checked)} /> <span>Show Team</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.resume} onChange={(e)=>onChange('visibility.resume', e.target.checked)} /> <span>Show Resume</span></label>
                 </div>
               )}
 
@@ -493,6 +626,49 @@ export default function AdminPanel() {
                 </div>
               )}
 
+              {tab === 'blog' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Blog</h3>
+                  <div className="space-y-4">
+                    {(draft.blogPosts || []).map((post, i) => (
+                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-2 gap-3">
+                          <Field label="Title">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={post.title||''}
+                              onChange={(e)=> setDraft(d=>{ const arr=[...(d.blogPosts||[])]; arr[i]={...arr[i], title:e.target.value}; return {...d, blogPosts:arr};})} />
+                          </Field>
+                          <Field label="Slug">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={post.slug||''}
+                              onChange={(e)=> setDraft(d=>{ const arr=[...(d.blogPosts||[])]; arr[i]={...arr[i], slug:e.target.value}; return {...d, blogPosts:arr};})} placeholder="mi-post" />
+                          </Field>
+                          <Field label="Published">
+                            <input type="checkbox" checked={!!post.published} onChange={(e)=> setDraft(d=>{ const arr=[...(d.blogPosts||[])]; arr[i]={...arr[i], published:e.target.checked}; return {...d, blogPosts:arr};})} />
+                          </Field>
+                          <Field label="Tags (comma-separated)">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(post.tags||[]).join(', ')}
+                              onChange={(e)=>{ const tags=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...(d.blogPosts||[])]; arr[i]={...arr[i], tags}; return {...d, blogPosts:arr};}); }} />
+                          </Field>
+                        </div>
+                        <Field label="Excerpt">
+                          <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={post.excerpt||''}
+                            onChange={(e)=> setDraft(d=>{ const arr=[...(d.blogPosts||[])]; arr[i]={...arr[i], excerpt:e.target.value}; return {...d, blogPosts:arr};})} />
+                        </Field>
+                        <Field label="Content (Markdown)">
+                          <textarea rows={8} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={post.content_md||''}
+                            onChange={(e)=> setDraft(d=>{ const arr=[...(d.blogPosts||[])]; arr[i]={...arr[i], content_md:e.target.value}; return {...d, blogPosts:arr};})} />
+                        </Field>
+                        <div className="text-right mt-2">
+                          <Button variant="outline" onClick={()=> setDraft(d=>{ const arr=[...(d.blogPosts||[])]; const removedSlug = post.slug; if (removedSlug) setRemovedBlogSlugs(prev=> Array.from(new Set([...prev, removedSlug]))); return { ...d, blogPosts: arr.filter((_,idx)=>idx!==i) }; })}>Remove</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, blogPosts:[...(d.blogPosts||[]), { title:'', slug:'', excerpt:'', content_md:'', tags:[], cover_image_path:null, published:false }] }))}>Add Post</Button>
+                  </div>
+                </div>
+              )}
+
               {tab === 'contact' && (
                 <div className="grid md:grid-cols-2 gap-6">
                   <Field label="Contact Email"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} /></Field>
@@ -536,7 +712,7 @@ export default function AdminPanel() {
               )}
 
               <div className="flex gap-3 mt-6">
-                <Button onClick={handleSave} className="bg-blue-600 text-white">Save</Button>
+                <Button onClick={handleSaveScoped} className="bg-blue-600 text-white">Save</Button>
                 <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
                 <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
               </div>

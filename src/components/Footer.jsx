@@ -23,6 +23,17 @@ const Footer = () => {
     legal: ['Política de Privacidad', 'Términos de Servicio', 'Cookies', 'Aviso Legal'],
   };
 
+  // Remove specific links per request
+  try {
+    const remove = new Set(['Carreras', 'Webinars', 'Newsletter', 'Centro de Ayuda']);
+    if (Array.isArray(footerLinks.company)) {
+      footerLinks.company = footerLinks.company.filter((l) => !remove.has(l.label));
+    }
+    if (Array.isArray(footerLinks.resources)) {
+      footerLinks.resources = footerLinks.resources.filter((l) => !remove.has(l.label));
+    }
+  } catch (_) {}
+
   const socialLinks = [
     { icon: Linkedin, name: 'LinkedIn', href: '#' },
     { icon: Twitter, name: 'Twitter', href: '#' },
@@ -114,6 +125,7 @@ const Footer = () => {
           </motion.div>
         </div>
 
+        {false && (
         <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="glass-effect rounded-2xl p-8 mb-12 border border-white/10">
           <div className="text-center">
             <h3 className="text-2xl font-bold text-white mb-4">Mantente <span className="gradient-text">Actualizado</span></h3>
@@ -124,6 +136,7 @@ const Footer = () => {
             </div>
           </div>
         </motion.div>
+        )}
 
         <div className="border-t border-white/10 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
