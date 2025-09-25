@@ -16,12 +16,12 @@ export default function Hero() {
   };
 
   const badge = content.hero?.badge || content.role || 'Data Analytics';
-  const title = content.hero?.title || 'Turning Data Into Decisions';
-  const subtitle = content.hero?.subtitle || 'Clean data, clear dashboards, and compelling stories.';
-  const primaryHref = content.hero?.primaryCta?.href || '#projects';
-  const primaryLabel = content.hero?.primaryCta?.label || 'View Projects';
+  const title = content.hero?.title || 'Transformo datos en decisiones estratégicas';
+  const subtitle = content.hero?.subtitle || 'Magíster en Analítica de Datos con experiencia en inteligencia artificial, visualización y modelos predictivos';
+  const primaryHref = content.hero?.primaryCta?.href || '#contact';
+  const primaryLabel = content.hero?.primaryCta?.label || 'Solicita una asesoría';
   const secondaryHref = content.hero?.secondaryCta?.href || '#contact';
-  const secondaryLabel = content.hero?.secondaryCta?.label || 'Contact Me';
+  const secondaryLabel = content.hero?.secondaryCta?.label || 'Conversemos sobre tu proyecto';
   const heroImage = content.hero?.image_path && supabase
     ? supabase.storage.from('portfolio-assets').getPublicUrl(content.hero.image_path).data.publicUrl
     : 'https://images.unsplash.com/photo-1552581234-26160f608093';

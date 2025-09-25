@@ -29,7 +29,7 @@ const defaultContent = {
     secondaryCta: { label: 'Contact Me', href: '#contact' },
   },
   about: {
-    heading: "Hi, I'm Beiby Vanegaz",
+    heading: "Hola, soy Deivy Andrés Vanegas",
     description:
       'Data Analyst focused on transforming raw data into business outcomes. I build clean pipelines, insightful analyses, and intuitive dashboards that help stakeholders act with confidence.',
     highlights: [

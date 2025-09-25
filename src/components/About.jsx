@@ -2,12 +2,13 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Award, CheckCircle, Users, Target } from 'lucide-react';
 import { useContent } from '@/content/ContentContext.jsx';
+import { supabase } from '@/lib/supabaseClient.js';
 
 const iconMap = { Users, Target };
 
 export default function About() {
-  const { content } = useContent();
-  const { heading, description, highlights } = content.about;
+   const { content } = useContent();
+   const { heading, description, highlights, image_path } = content.about;
 
   return (
     <section id="about" className="relative z-20 overflow-hidden scroll-mt-40 -mt-20 md:-mt-28 pt-6 md:pt-8 pb-24">
@@ -58,7 +59,14 @@ export default function About() {
               <img
                 className="w-full h-auto rounded-2xl shadow-2xl"
                 alt="Data visuals and analytics dashboard"
-                src="https://images.unsplash.com/photo-1552581234-26160f608093"
+                src={(() => {
+                  let url = null;
+                  if (image_path) {
+                    if (/^(https?:|data:|blob:)/i.test(image_path)) url = image_path;
+                    else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(image_path).data.publicUrl;
+                  }
+                  return url || "https://images.unsplash.com/photo-1552581234-26160f608093";
+                })()}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent rounded-2xl" />
 

@@ -22,6 +22,7 @@ export default function AdminPanel() {
   const [heroFile, setHeroFile] = useState(null);
   const [projectFiles, setProjectFiles] = useState({});
   const [logoFile, setLogoFile] = useState(null);
+  const [aboutFile, setAboutFile] = useState(null);
 
   useEffect(() => setDraft(content), [content]);
 
@@ -144,6 +145,17 @@ export default function AdminPanel() {
         }
         setHeroFile(null);
       }
+      if (aboutFile && supabase && session && isAdmin) {
+        const key = `about/${Date.now()}-${aboutFile.name}`.replace(/\s+/g, '-');
+        const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, aboutFile, { upsert: true });
+        if (upErr) {
+          toast({ title: 'Error subiendo imagen', description: upErr.message, variant: 'destructive' });
+        } else {
+          next = { ...draft, about: { ...draft.about, image_path: key } };
+          setDraft(next);
+        }
+        setAboutFile(null);
+      }
       setContent(next);
       if (supabase) {
         if (session && isAdmin) {
@@ -175,6 +187,7 @@ export default function AdminPanel() {
                 ['general','General'],
                 ['branding','Branding'],
                 ['hero','Hero'],
+                ['about','Sobre Mi'],
                 ['visibility','Visibilidad'],
                 ['services','Services JSON'],
                 ['projects','Projects JSON'],
@@ -330,6 +343,43 @@ export default function AdminPanel() {
                           <img src={url} alt="Logo preview" className="w-24 h-24 object-contain" />
                         ) : (
                           <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin logo</div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {tab === 'about' && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Field label="Heading">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.about.heading} onChange={(e)=>onChange('about.heading', e.target.value)} />
+                    </Field>
+                    <Field label="Description">
+                      <textarea rows={8} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.about.description} onChange={(e)=>onChange('about.description', e.target.value)} />
+                    </Field>
+                  </div>
+                  <div>
+                    <Field label="About Image (upload to replace)">
+                      <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=>setAboutFile(e.target.files?.[0] || null)} />
+                      {draft.about?.image_path && (
+                        <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.about.image_path}</div>
+                      )}
+                    </Field>
+                    <div className="text-sm text-gray-300 mb-2">Vista previa</div>
+                    <div className="glass-effect rounded-xl p-4 border border-white/10">
+                      {(() => {
+                        const path = draft.about?.image_path;
+                        let url = null;
+                        if (path) {
+                          if (/^(https?:|data:|blob:)/i.test(path)) url = path;
+                          else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(path).data.publicUrl;
+                        }
+                        return url ? (
+                          <img src={url} alt="About preview" className="w-24 h-24 object-contain" />
+                        ) : (
+                          <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin imagen</div>
                         );
                       })()}
                     </div>
