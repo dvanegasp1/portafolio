@@ -23,6 +23,7 @@ export default function AdminPanel() {
   const [projectFiles, setProjectFiles] = useState({});
   const [logoFile, setLogoFile] = useState(null);
   const [aboutFile, setAboutFile] = useState(null);
+  const [serviceFiles, setServiceFiles] = useState({});
 
   useEffect(() => setDraft(content), [content]);
 
@@ -155,6 +156,21 @@ export default function AdminPanel() {
           setDraft(next);
         }
         setAboutFile(null);
+      }
+      if (Object.keys(serviceFiles).length > 0 && supabase && session && isAdmin) {
+        for (const [idx, file] of Object.entries(serviceFiles)) {
+          if (file) {
+            const key = `services/icons/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
+            const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
+            if (upErr) {
+              toast({ title: 'Error subiendo imagen de icono', description: upErr.message, variant: 'destructive' });
+            } else {
+              next = { ...next, services: next.services.map((s, i) => i == idx ? { ...s, icon_path: key } : s) };
+              setDraft(next);
+            }
+          }
+        }
+        setServiceFiles({});
       }
       setContent(next);
       if (supabase) {
@@ -421,6 +437,10 @@ export default function AdminPanel() {
                               onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], description:v}; return {...d, services:arr};}); }} />
                           </Field>
                         </div>
+                        <Field label="Icon Image (upload to replace)">
+                          <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setServiceFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
+                          {svc.icon_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {svc.icon_path}</div>}
+                        </Field>
                         <div className="text-right mt-2">
                           <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, services: d.services.filter((_,idx)=>idx!==i) }))}>Remove</Button>
                         </div>

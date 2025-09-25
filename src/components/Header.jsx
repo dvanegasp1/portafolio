@@ -27,7 +27,7 @@ export default function Header() {
     { name: 'Home', href: '#home', show: true },
     { name: 'Services', href: '#services', show: content.visibility.services },
     { name: 'Projects', href: '#projects', show: content.visibility.projects },
-    { name: 'About', href: '#about', show: true },
+    { name: 'Sobre Mi', href: '#about', show: true },
     { name: 'Team', href: '#team', show: content.visibility.team },
     { name: 'Testimonials', href: '#testimonials', show: content.visibility.testimonials },
     { name: 'Contact', href: '#contact', show: true },

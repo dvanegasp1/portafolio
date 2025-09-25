@@ -192,8 +192,11 @@ create table if not exists services (
   icon text check (icon in ('BarChart3','Database','LineChart','Workflow')),
   title text not null,
   description text,
+  icon_path text,
   sort_order int default 0
 );
+-- Add icon_path column if it doesn't exist (for existing tables)
+alter table services add column if not exists icon_path text;
 alter table services enable row level security;
 drop policy if exists "services public read" on services;
 create policy "services public read" on services for select using (true);

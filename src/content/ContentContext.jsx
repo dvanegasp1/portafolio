@@ -31,13 +31,12 @@ const defaultContent = {
   about: {
     heading: "Hola, soy Deivy Andrés Vanegas",
     description:
-      'Data Analyst focused on transforming raw data into business outcomes. I build clean pipelines, insightful analyses, and intuitive dashboards that help stakeholders act with confidence.',
+      "Hola, soy Deivy Andrés Vanegas, un apasionado por los datos, la tecnología y el conocimiento. A lo largo de mi vida profesional he aprendido que detrás de cada número hay una historia, y detrás de cada historia, una oportunidad para mejorar.\n\nMi camino comenzó en el servicio público, donde durante más de 15 años en la Policía Nacional de Colombia lideré procesos de análisis, gestión del conocimiento y cultura institucional. Esa experiencia me enseñó el valor de la información bien utilizada: puede salvar vidas, optimizar recursos y transformar organizaciones.\n\nHoy, como Magíster en Analítica de Datos, combino mi formación en administración, seguridad vial y desarrollo de sistemas para ofrecer soluciones que van más allá de los gráficos y algoritmos. Trabajo con herramientas como Python, R, Power BI, KNIME y Neo4j para convertir datos en decisiones inteligentes, automatizar procesos y construir modelos predictivos que anticipan el futuro.\n\nCreo en la ética, la innovación y el impacto social. Cada proyecto que emprendo busca generar valor real, empoderar a las personas y construir un país más eficiente, justo y conectado.\n\nSi tú también crees que los datos pueden cambiar el mundo, estás en el lugar correcto.",
     highlights: [
-      'SQL, Python (pandas), Excel/Google Sheets',
-      'Power BI, Tableau, Looker Studio',
       'ETL, data modeling, KPI design',
       'A/B testing, forecasting, cohort analysis',
     ],
+    image_path: null,
   },
   services: [
     {
@@ -139,7 +138,7 @@ export function ContentProvider({ children }) {
     // about + highlights
     const { data: about } = await supabase.from('about').select('*').eq('site_id', 1).maybeSingle();
     if (about) {
-      result.about = { heading: about.heading ?? '', description: about.description ?? '', highlights: [] };
+      result.about = { heading: about.heading ?? '', description: about.description ?? '', highlights: [], image_path: about.image_path || undefined };
       const { data: highlights } = await supabase
         .from('about_highlights')
         .select('value, sort_order')
@@ -150,10 +149,10 @@ export function ContentProvider({ children }) {
     // services
     const { data: services } = await supabase
       .from('services')
-      .select('icon,title,description,sort_order')
+      .select('icon,title,description,icon_path,sort_order')
       .eq('site_id', 1)
       .order('sort_order', { ascending: true });
-    if (services) result.services = services.map((s) => ({ icon: s.icon, title: s.title, description: s.description }));
+    if (services) result.services = services.map((s) => ({ icon: s.icon, title: s.title, description: s.description, icon_path: s.icon_path }));
     // projects + tags
     const { data: projects } = await supabase
       .from('projects')
@@ -239,7 +238,7 @@ export function ContentProvider({ children }) {
       image_path: c.hero?.image_path || null,
     }, { onConflict: 'site_id' });
     if (s3.error) errors.push(s3.error);
-    const s4 = await supabase.from('about').upsert({ site_id: 1, heading: c.about?.heading || '', description: c.about?.description || '' }, { onConflict: 'site_id' });
+    const s4 = await supabase.from('about').upsert({ site_id: 1, heading: c.about?.heading || '', description: c.about?.description || '', image_path: c.about?.image_path || null }, { onConflict: 'site_id' });
     if (s4.error) errors.push(s4.error);
     const s5del = await supabase.from('about_highlights').delete().eq('site_id', 1);
     if (s5del.error) errors.push(s5del.error);
@@ -252,7 +251,7 @@ export function ContentProvider({ children }) {
     const s6del = await supabase.from('services').delete().eq('site_id', 1);
     if (s6del.error) errors.push(s6del.error);
     if (Array.isArray(c.services) && c.services.length) {
-      const rows = c.services.map((s, idx) => ({ site_id: 1, icon: s.icon, title: s.title, description: s.description, sort_order: (idx + 1) * 10 }));
+      const rows = c.services.map((s, idx) => ({ site_id: 1, icon: s.icon, title: s.title, description: s.description, icon_path: s.icon_path || null, sort_order: (idx + 1) * 10 }));
       const s6ins = await supabase.from('services').insert(rows);
       if (s6ins.error) errors.push(s6ins.error);
     }
