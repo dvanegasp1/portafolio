@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Services from '@/components/Services';
+import ServiceDetail from '@/pages/ServiceDetail.jsx';
 import Projects from '@/components/Projects';
 import About from '@/components/About';
 import Team from '@/components/Team';
@@ -83,9 +84,7 @@ function AppInner() {
             {content.visibility.testimonials && <Testimonials />}
             <Contact />
           </>
-        )}
-
-        {route === 'services' && <Services />}
+        )}        {route.startsWith('services/') && <ServiceDetail slug={route.slice('services/'.length)} />}
         {route === 'projects' && <Projects />}
         {route === 'about' && <About />}
         {route === 'blog' && (
@@ -142,3 +141,8 @@ export default function App() {
     </ContentProvider>
   );
 }
+
+
+
+
+

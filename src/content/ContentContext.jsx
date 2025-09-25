@@ -1,8 +1,67 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient.js';
+import { slugify } from '@/lib/utils.js';
 
 // Local storage is intentionally not used anymore; Supabase is the source of truth.
 
+const servicesSeed = [
+  {
+    icon: 'BarChart3',
+    title: 'Knime',
+    description: 'Design and build dashboards that surface the metrics that matter.',
+    icon_path: null,
+    slug: 'knime',
+    long_description:
+      'We configure tailored KNIME workflows to automate data preparation, KPI calculations, and dashboard refreshes so stakeholders always see up-to-date metrics.\n\nFrom data ingestion to visualization, we align every step with business priorities to deliver BI assets that drive decisions.',
+    highlights: [
+      'Custom KNIME pipelines tailored to your stack',
+      'Automated reporting with governed metrics',
+      'Dashboard rollout and stakeholder enablement',
+    ],
+  },
+  {
+    icon: 'Database',
+    title: 'Data Cleaning & Modeling',
+    description: 'From messy CSVs to reliable datasets ready for analysis.',
+    icon_path: null,
+    slug: 'data-cleaning-modeling',
+    long_description:
+      'We audit your current datasets, identify structural issues, and implement a modeling layer that keeps analytics trustworthy.\n\nOur work covers data quality rules, dimensional modeling, and documentation so teams can reuse the logic with confidence.',
+    highlights: [
+      'Profiling and anomaly detection',
+      'Dimensional models for analytics consistency',
+      'Documentation and handover playbooks',
+    ],
+  },
+  {
+    icon: 'LineChart',
+    title: 'Analysis & Insights',
+    description: 'Exploratory analysis, cohorts, funnels, segmentation, and forecasting.',
+    icon_path: null,
+    slug: 'analysis-insights',
+    long_description:
+      'Translate business questions into data stories that accelerate growth. We combine exploratory techniques with statistical models to uncover actionable insights across marketing, revenue, and operations.',
+    highlights: [
+      'Cohort, funnel, and retention analysis',
+      'Segmentation and clustering exercises',
+      'Experiment readouts and forecasting',
+    ],
+  },
+  {
+    icon: 'Workflow',
+    title: 'Automation & ETL',
+    description: 'Automated pipelines that keep data fresh and trustworthy.',
+    icon_path: null,
+    slug: 'automation-etl',
+    long_description:
+      'We design and implement resilient data pipelines with monitoring so your analytics layer is always reliable. From ingestion to orchestration, every job is versioned and observable.',
+    highlights: [
+      'Modern ETL/ELT architecture',
+      'Orchestration and alerting setup',
+      'CI/CD for analytics engineering',
+    ],
+  },
+];
 const defaultContent = {
   siteName: '',
   role: '',
@@ -101,14 +160,146 @@ export function ContentProvider({ children }) {
         .order('sort_order', { ascending: true });
       result.about.highlights = (highlights ?? []).map((h) => h.value);
     }
-    // services
-    const { data: services } = await supabase
+    
+
+
+// services
+let sourceServices;
+const { data: services, error: servicesError } = await supabase
+  .from('services')
+  .select('icon,title,description,icon_path,sort_order')
+  .eq('site_id', 1)
+  .order('sort_order', { ascending: true });
+
+if (!servicesError && Array.isArray(services) && services.length) {
+  sourceServices = services;
+} else {
+  const seedRows = servicesSeed.map((svc, idx) => ({
+    site_id: 1,
+    icon: svc.icon,
+    title: svc.title,
+    description: svc.description,
+    icon_path: svc.icon_path,
+    sort_order: (idx + 1) * 10,
+  }));
+  const { error: seedInsertError } = await supabase.from('services').insert(seedRows);
+  if (!seedInsertError) {
+    const { data: seeded } = await supabase
       .from('services')
       .select('icon,title,description,icon_path,sort_order')
       .eq('site_id', 1)
       .order('sort_order', { ascending: true });
-    if (services) result.services = services.map((s) => ({ icon: s.icon, title: s.title, description: s.description, icon_path: s.icon_path }));
-    // projects + tags
+    sourceServices = Array.isArray(seeded) ? seeded : [];
+  } else {
+    sourceServices = [];
+  }
+}
+
+if (Array.isArray(sourceServices) && sourceServices.length) {
+  result.services = sourceServices.map((s, idx) => {
+    const slug = slugify(s?.title || `service-${idx + 1}`);
+    const seed = servicesSeed.find((item) => item.slug === slug) || servicesSeed[idx] || {};
+    const baseHighlights = Array.isArray(seed.highlights) ? seed.highlights : [];
+    return {
+      icon: s.icon ?? seed.icon,
+      title: s.title ?? seed.title,
+      description: s.description ?? seed.description,
+      icon_path: s.icon_path ?? seed.icon_path ?? null,
+      slug,
+      long_description: seed.long_description || '',
+      highlights: baseHighlights,
+    };
+  });
+} else {
+  result.services = servicesSeed;
+}
+
+// education
+const { data: educationRows, error: educationError } = await supabase
+  .from('education')
+  .select('institution, program, location, start_year, end_year, description, achievements, icon_path, sort_order')
+  .eq('site_id', 1)
+  .order('sort_order', { ascending: true });
+
+if (!educationError && Array.isArray(educationRows) && educationRows.length) {
+  result.education = educationRows.map((row) => ({
+    institution: row.institution || '',
+    program: row.program || '',
+    location: row.location || '',
+    start: row.start_year || '',
+    end: row.end_year || '',
+    description: row.description || '',
+    achievements: parseMultilineList(row.achievements),
+    icon_path: row.icon_path || null,
+  }));
+} else {
+  result.education = cloneSeedList(educationSeed);
+}
+
+// experience
+const { data: experienceRows, error: experienceError } = await supabase
+  .from('experience')
+  .select('company, role, location, start_year, end_year, description, achievements, icon_path, sort_order')
+  .eq('site_id', 1)
+  .order('sort_order', { ascending: true });
+
+if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) {
+  result.experience = experienceRows.map((row) => ({
+    company: row.company || '',
+    role: row.role || '',
+    location: row.location || '',
+    start: row.start_year || '',
+    end: row.end_year || '',
+    description: row.description || '',
+    achievements: parseMultilineList(row.achievements),
+    icon_path: row.icon_path || null,
+  }));
+} else {
+  result.experience = cloneSeedList(experienceSeed);
+}
+
+
+// Education
+const eduDel = await supabase.from('education').delete().eq('site_id', 1);
+if (eduDel?.error) errors.push(eduDel.error);
+if (Array.isArray(c.education) && c.education.length) {
+  const rows = c.education.map((item, idx) => ({
+    site_id: 1,
+    institution: item.institution || '',
+    program: item.program || '',
+    location: item.location || '',
+    start_year: item.start || '',
+    end_year: item.end || '',
+    description: item.description || '',
+    achievements: joinMultilineList(item.achievements),
+    icon_path: item.icon_path || null,
+    sort_order: (idx + 1) * 10,
+  }));
+  const eduIns = await supabase.from('education').insert(rows);
+  if (eduIns?.error) errors.push(eduIns.error);
+}
+
+// Experience
+const expDel = await supabase.from('experience').delete().eq('site_id', 1);
+if (expDel?.error) errors.push(expDel.error);
+if (Array.isArray(c.experience) && c.experience.length) {
+  const rows = c.experience.map((item, idx) => ({
+    site_id: 1,
+    company: item.company || '',
+    role: item.role || '',
+    location: item.location || '',
+    start_year: item.start || '',
+    end_year: item.end || '',
+    description: item.description || '',
+    achievements: joinMultilineList(item.achievements),
+    icon_path: item.icon_path || null,
+    sort_order: (idx + 1) * 10,
+  }));
+  const expIns = await supabase.from('experience').insert(rows);
+  if (expIns?.error) errors.push(expIns.error);
+}
+
+    // Projects + tags
     const { data: projects } = await supabase
       .from('projects')
       .select('id,title,description,link,cover_image_path,sort_order')
@@ -244,14 +435,23 @@ export function ContentProvider({ children }) {
       const s5ins = await supabase.from('about_highlights').insert(rows);
       if (s5ins.error) errors.push(s5ins.error);
     }
-    // Services
-    const s6del = await supabase.from('services').delete().eq('site_id', 1);
-    if (s6del.error) errors.push(s6del.error);
-    if (Array.isArray(c.services) && c.services.length) {
-      const rows = c.services.map((s, idx) => ({ site_id: 1, icon: s.icon, title: s.title, description: s.description, icon_path: s.icon_path || null, sort_order: (idx + 1) * 10 }));
-      const s6ins = await supabase.from('services').insert(rows);
-      if (s6ins.error) errors.push(s6ins.error);
-    }
+    
+
+    // services
+const s6del = await supabase.from('services').delete().eq('site_id', 1);
+if (s6del.error) errors.push(s6del.error);
+if (Array.isArray(c.services) && c.services.length) {
+  const rows = c.services.map((s, idx) => ({
+    site_id: 1,
+    icon: s.icon,
+    title: s.title,
+    description: s.description,
+    icon_path: s.icon_path || null,
+    sort_order: (idx + 1) * 10,
+  }));
+  const s6ins = await supabase.from('services').insert(rows);
+  if (s6ins.error) errors.push(s6ins.error);
+}
     // Projects + tags
     const s7del = await supabase.from('projects').delete().eq('site_id', 1);
     if (s7del.error) errors.push(s7del.error);
@@ -274,7 +474,7 @@ export function ContentProvider({ children }) {
     // Contact, visibility, why_us
     const s8 = await supabase.from('contact').upsert({ site_id: 1, email: c.contact?.email || '', location: c.contact?.location || '', schedule_url: c.contact?.scheduleUrl || '' }, { onConflict: 'site_id' });
     if (s8.error) errors.push(s8.error);
-    const s9 = await supabase.from('visibility').upsert({ site_id: 1, services: !!c.visibility?.services, projects: !!c.visibility?.projects, testimonials: !!c.visibility?.testimonials, team: !!c.visibility?.team }, { onConflict: 'site_id' });
+    const s9 = await supabase.from('visibility').upsert({ site_id: 1, services: !!c.visibility?.services, projects: !!c.visibility?.projects, testimonials: !!c.visibility?.testimonials, team: !!c.visibility?.team, resume: !!c.visibility?.resume }, { onConflict: 'site_id' });
     if (s9.error) errors.push(s9.error);
     const s10del = await supabase.from('why_us').delete().eq('site_id', 1);
     if (s10del.error) errors.push(s10del.error);
@@ -304,6 +504,12 @@ export function ContentProvider({ children }) {
 export function useContent() {
   return useContext(ContentContext);
 }
+
+
+
+
+
+
 
 
 

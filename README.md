@@ -34,7 +34,7 @@ src/
     Header.jsx           # top navigation
     Hero.jsx             # hero with overlay cards
     About.jsx            # about/skills
-    Servicess.jsx        # services/capabilities (content‑driven)
+    Services.jsx        # services/capabilities (content‑driven)
     Projects.jsx         # case studies (content‑driven)
     Contact.jsx          # contact form + info
     Footer.jsx           # footer + newsletter
@@ -166,4 +166,5 @@ Note: The current Admin UI still edits the JSON model by default. You can migrat
 
 - Rich editors for Services/Projects, multilingual support
 - Contact provider integration (EmailJS/Formspree)
+
 
