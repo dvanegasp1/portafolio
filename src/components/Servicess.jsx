@@ -4,6 +4,7 @@ import { BarChart3, Database, LineChart, Workflow, ArrowRight } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { useContent } from '@/content/ContentContext.jsx';
 import { supabase } from '@/lib/supabaseClient.js';
+import { slugify } from '@/lib/utils.js';
 
 const iconMap = { BarChart3, Database, LineChart, Workflow };
 
@@ -78,17 +79,26 @@ const Services = () => {
               );
             }
 
-            let iconElement;
+            let thumbnail = null;
             if (service.icon_path) {
               let url = service.icon_path;
               if (supabase && !/^https?:/i.test(url)) {
                 url = supabase.storage.from('portfolio-assets').getPublicUrl(service.icon_path).data.publicUrl;
               }
-              iconElement = <img src={url} alt="Service icon" className="w-8 h-8 object-contain" />;
-            } else {
-              const Icon = iconMap[service.icon] || BarChart3;
-              iconElement = <Icon className="w-8 h-8 text-white" />;
+              thumbnail = url;
             }
+
+            const Icon = iconMap[service.icon] || BarChart3;
+            const iconWrapperClasses = [
+              'w-20 h-20 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110',
+              thumbnail ? 'overflow-hidden bg-white/5 border border-white/10 shadow-inner' : 'bg-gradient-to-r from-purple-500 to-pink-500'
+            ].join(' ');
+
+            const slug = service.slug || slugify(service.title || `service-${index + 1}`);
+            const goToServiceDetail = () => {
+              window.location.hash = `#/services/${encodeURIComponent(slug)}`;
+            };
+
             return (
               <motion.div
                 key={service.title + index}
@@ -99,19 +109,27 @@ const Services = () => {
                 whileHover={{ y: -10 }}
                 className="group"
               >
-                <div className="glass-effect rounded-2xl p-8 h-full hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20">
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    {iconElement}
+                <button
+                  type="button"
+                  onClick={goToServiceDetail}
+                  className="glass-effect rounded-2xl p-8 h-full w-full text-left hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 cursor-pointer"
+                >
+                  <div className={iconWrapperClasses}>
+                    {thumbnail ? (
+                      <img src={thumbnail} alt={service.title || 'Service icon'} className="w-full h-full object-cover" />
+                    ) : (
+                      <Icon className="w-10 h-10 text-white" />
+                    )}
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-white">{service.title}</h3>
                   <p className="text-gray-300 mb-6 leading-relaxed">{service.description}</p>
-                </div>
+                </button>
               </motion.div>
             );
           })}
         </div>
 
-        {(!loading && services.length > 0) && (
+        {!loading && services.length > 0 && (
           <div className="mt-12 flex justify-center">
             <Button onClick={handleLearnMore} variant="ghost" className="text-purple-300 hover:text-white hover:bg-purple-500/10">
               Ver proyectos relacionados
