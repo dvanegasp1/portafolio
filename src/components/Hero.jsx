@@ -160,11 +160,11 @@ export default function Hero() {
             <div className="mt-12 pt-8 border-t border-blue-500/30" />
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="relative">
+          <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="relative mt-[-8rem] ml-[-2rem]">
             {heroImage ? (
-              <img className="w-full h-auto rounded-2xl shadow-2xl object-cover" alt="Hero" src={heroImage} />
+              <img className="w-full max-h-80 rounded-2xl shadow-2xl object-cover" alt="Hero" src={heroImage} />
             ) : (
-              <div className="w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-blue-900/60 to-cyan-900/40 border border-blue-500/20 shadow-2xl" />
+              <div className="w-full max-h-80 rounded-2xl bg-gradient-to-br from-blue-900/60 to-cyan-900/40 border border-blue-500/20 shadow-2xl" />
             )}
             {renderWhyCard(whyCards[0], Users, '-top-6 -left-6')}
             {renderWhyCard(whyCards[1], Target, '-bottom-6 -right-6')}
