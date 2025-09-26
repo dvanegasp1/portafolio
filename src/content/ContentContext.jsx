@@ -306,30 +306,32 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
   result.experience = cloneSeedList(experienceSeed);
 }
 
+    // visibility
+    const { data: vis } = await supabase.from('visibility').select('*').eq('site_id', 1).maybeSingle();
+    if (vis) result.visibility = { services: !!vis.services, projects: !!vis.projects, testimonials: !!vis.testimonials, team: !!vis.team, resume: vis.resume !== false };
     // Projects + tags
-    const { data: projects } = await supabase
-      .from('projects')
-      .select('id,title,description,link,cover_image_path,sort_order')
-      .eq('site_id', 1)
-      .order('sort_order', { ascending: true });
-    if (projects) {
-      const ids = projects.map((p) => p.id);
-      let tagsById = {};
-      if (ids.length) {
-        const { data: tags } = await supabase.from('project_tags').select('project_id, tag').in('project_id', ids);
-        tagsById = (tags ?? []).reduce((acc, t) => {
-          (acc[t.project_id] = acc[t.project_id] || []).push(t.tag);
-          return acc;
-        }, {});
+    if (result.visibility.projects !== false) {
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id,title,description,link,cover_image_path,sort_order')
+        .eq('site_id', 1)
+        .order('sort_order', { ascending: true });
+      if (projects) {
+        const ids = projects.map((p) => p.id);
+        let tagsById = {};
+        if (ids.length) {
+          const { data: tags } = await supabase.from('project_tags').select('project_id, tag').in('project_id', ids);
+          tagsById = (tags ?? []).reduce((acc, t) => {
+            (acc[t.project_id] = acc[t.project_id] || []).push(t.tag);
+            return acc;
+          }, {});
+        }
+        result.projects = projects.map((p) => ({ title: p.title, description: p.description, tags: tagsById[p.id] || [], link: p.link }));
       }
-      result.projects = projects.map((p) => ({ title: p.title, description: p.description, tags: tagsById[p.id] || [], link: p.link }));
     }
     // contact
     const { data: contact } = await supabase.from('contact').select('*').eq('site_id', 1).maybeSingle();
     if (contact) result.contact = { email: contact.email || '', location: contact.location || '', scheduleUrl: contact.schedule_url || '', phone: contact.phone || '', hours: contact.hours || '', note: contact.note || '' };
-    // visibility
-    const { data: vis } = await supabase.from('visibility').select('*').eq('site_id', 1).maybeSingle();
-    if (vis) result.visibility = { services: !!vis.services, projects: !!vis.projects, testimonials: !!vis.testimonials, team: !!vis.team, resume: vis.resume !== false };
     // why_us
     const { data: why } = await supabase
       .from('why_us')
@@ -361,44 +363,48 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
         published_at: p.published_at || null,
       }));
     }
-    const { data: teamMembers, error: teamErr } = await supabase
-      .from('team_members')
-      .select('id,name,position,specialization,experience,description,achievements,avatar_path,sort_order')
-      .eq('site_id', 1)
-      .order('sort_order', { ascending: true });
-    if (!teamErr && teamMembers) {
-      result.teamMembers = teamMembers.map((member) => ({
-        name: member.name,
-        position: member.position,
-        specialization: member.specialization,
-        experience: member.experience,
-        description: member.description,
-        achievements: Array.isArray(member.achievements)
-          ? member.achievements
-          : (typeof member.achievements === 'string'
-              ? member.achievements.split('|').map((s) => s.trim()).filter(Boolean)
-              : []),
-        avatar_path: member.avatar_path || null,
-        id: member.id || null,
-      }));
+    if (result.visibility.team) {
+      const { data: teamMembers, error: teamErr } = await supabase
+        .from('team_members')
+        .select('id,name,position,specialization,experience,description,achievements,avatar_path,sort_order')
+        .eq('site_id', 1)
+        .order('sort_order', { ascending: true });
+      if (!teamErr && teamMembers) {
+        result.teamMembers = teamMembers.map((member) => ({
+          name: member.name,
+          position: member.position,
+          specialization: member.specialization,
+          experience: member.experience,
+          description: member.description,
+          achievements: Array.isArray(member.achievements)
+            ? member.achievements
+            : (typeof member.achievements === 'string'
+                ? member.achievements.split('|').map((s) => s.trim()).filter(Boolean)
+                : []),
+          avatar_path: member.avatar_path || null,
+          id: member.id || null,
+        }));
+      }
     }
-    const { data: testimonials, error: testimonialsErr } = await supabase
-      .from('testimonials')
-      .select('id,name,position,company,rating,text,result,industry,avatar_path,sort_order')
-      .eq('site_id', 1)
-      .order('sort_order', { ascending: true });
-    if (!testimonialsErr && testimonials) {
-      result.testimonials = testimonials.map((t) => ({
-        name: t.name,
-        position: t.position,
-        company: t.company,
-        rating: typeof t.rating === 'number' ? t.rating : Number.parseInt(t.rating, 10) || 0,
-        text: t.text,
-        result: t.result,
-        industry: t.industry,
-        avatar_path: t.avatar_path || null,
-        id: t.id || null,
-      }));
+    if (result.visibility.testimonials) {
+      const { data: testimonials, error: testimonialsErr } = await supabase
+        .from('testimonials')
+        .select('id,name,position,company,rating,text,result,industry,avatar_path,sort_order')
+        .eq('site_id', 1)
+        .order('sort_order', { ascending: true });
+      if (!testimonialsErr && testimonials) {
+        result.testimonials = testimonials.map((t) => ({
+          name: t.name,
+          position: t.position,
+          company: t.company,
+          rating: typeof t.rating === 'number' ? t.rating : Number.parseInt(t.rating, 10) || 0,
+          text: t.text,
+          result: t.result,
+          industry: t.industry,
+          avatar_path: t.avatar_path || null,
+          id: t.id || null,
+        }));
+      }
     }
     return result;
   };

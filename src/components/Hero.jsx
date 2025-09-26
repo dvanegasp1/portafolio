@@ -97,15 +97,15 @@ export default function Hero() {
     if (!item) return null;
     const Icon = iconMap[item.icon] || fallbackIcon;
     return (
-      <div className={`absolute ${positionClass || 'top-6 left-6'} w-[40rem] md:w-[44rem]`}>
+      <div className={`absolute ${positionClass || 'top-6 left-6'} w-[100rem] md:w-[100rem]`}>
         <div className="glass-effect rounded-2xl p-6 border border-white/10 shadow-xl">
           <div className="flex items-center">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mr-4">
-              <Icon className="w-10 h-10 md:w-12 md:h-12 text-white" />
+            <div className="w-16 h-16 md:w-40 md:h-40 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mr-4">
+              <Icon className="w-100 h-10 md:w-12 md:h-12 text-white" />
             </div>
             <div>
               <div className="text-white font-semibold leading-tight text-lg md:text-2xl">{item.title}</div>
-              <div className="text-gray-300 text-sm md:text-lg">{item.subtitle}</div>
+              <div className="text-gray-300 text-md md:text-lg">{item.subtitle}</div>
             </div>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               {loading ? (
                 <>
-                  <SkeletonBlock className="h-12 w-40" />
+                  <SkeletonBlock className="h-50 w-40" />
                   <SkeletonBlock className="h-12 w-40" />
                 </>
               ) : (
