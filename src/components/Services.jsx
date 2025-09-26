@@ -34,7 +34,7 @@ const Services = () => {
   return (
     <section
       id="services"
-      className="relative z-20 overflow-hidden scroll-mt-40 -mt-16 md:-mt-24 pt-10 md:pt-12 pb-16"
+      className="relative z-20 overflow-hidden scroll-mt-40 mt-12 md:mt-16 pt-16 md:pt-20 pb-16 md:pb-20"
     >
       <div className="container mx-auto px-6">
         <motion.div
