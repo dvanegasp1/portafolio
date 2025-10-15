@@ -495,8 +495,12 @@ export default function AdminPanel() {
 
               {tab === 'contact' && (
                 <div className="grid md:grid-cols-2 gap-6">
+                  <Field label="Contact Heading"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contactHeading||''} onChange={(e)=>onChange('contactHeading', e.target.value)} /></Field>
                   <Field label="Contact Email"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} /></Field>
+                  <Field label="Phone"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.phone||''} onChange={(e)=>onChange('contact.phone', e.target.value)} /></Field>
                   <Field label="Location"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} /></Field>
+                  <Field label="Hours"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.hours||''} onChange={(e)=>onChange('contact.hours', e.target.value)} /></Field>
+                  <Field label="Note (Description)"><textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.note||''} onChange={(e)=>onChange('contact.note', e.target.value)} /></Field>
                   <Field label="Schedule URL (Calendly, etc.)"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.scheduleUrl||''} onChange={(e)=>onChange('contact.scheduleUrl', e.target.value)} placeholder="https://calendly.com/usuario/llamada" /></Field>
                 </div>
               )}

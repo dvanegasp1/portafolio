@@ -84,10 +84,10 @@ const Services = () => {
               if (supabase && !/^https?:/i.test(url)) {
                 url = supabase.storage.from('portfolio-assets').getPublicUrl(service.icon_path).data.publicUrl;
               }
-              iconElement = <img src={url} alt="Service icon" className="w-8 h-8 object-contain" />;
+              iconElement = <img src={url} alt="Service icon" className="w-12 h-12 object-contain" />;
             } else {
               const Icon = iconMap[service.icon] || BarChart3;
-              iconElement = <Icon className="w-8 h-8 text-white" />;
+              iconElement = <Icon className="w-12 h-12 text-white" />;
             }
             return (
               <motion.div
@@ -100,7 +100,7 @@ const Services = () => {
                 className="group"
               >
                 <div className="glass-effect rounded-2xl p-8 h-full hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20">
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-blue-800 to-blue-900 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                     {iconElement}
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-white">{service.title}</h3>
