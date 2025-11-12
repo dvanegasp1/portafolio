@@ -1,24 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Linkedin, Twitter, Instagram, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient.js';
 import { useContent } from '@/content/ContentContext.jsx';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterError, setNewsletterError] = useState('');
 
   const footerLinks = {
     company: [
-      { label: 'Carreras', href: '#/careers' },
-      { label: 'Blog', href: '#/blog' },
+      { label: 'Sobre mí', href: '#/about' },
+      { label: 'Proyectos', href: '#/projects' },
+      { label: 'Contacto', href: '#/contact' },
     ],
     resources: [
-      { label: 'Recursos Gratuitos', href: '#/resources' },
-      { label: 'Webinars', href: '#/webinars' },
-      { label: 'Whitepapers', href: '#/whitepapers' },
-      { label: 'Newsletter', href: '#/newsletter' },
-      { label: 'Centro de Ayuda', href: '#/help' },
+      { label: 'Artículos', href: '#/articles' },
+      { label: 'Publicaciones', href: '#/publications' },
+      { label: 'Casos de Estudio', href: '#/case-studies' },
     ],
     legal: ['Política de Privacidad', 'Términos de Servicio', 'Cookies', 'Aviso Legal'],
   };
@@ -35,6 +37,26 @@ const Footer = () => {
   };
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) {
+      setNewsletterError('Email es requerido');
+      return;
+    }
+    if (!validateEmail(newsletterEmail)) {
+      setNewsletterError('Email inválido');
+      return;
+    }
+    setNewsletterError('');
+    toast({ title: '¡Suscripción exitosa!', description: 'Gracias por suscribirte. Recibirás nuestras novedades pronto.' });
+    setNewsletterEmail('');
+  };
 
   const { content } = useContent();
   const logoUrl = (() => {
@@ -60,16 +82,16 @@ const Footer = () => {
               <span className="text-2xl font-bold gradient-text">{content.siteName}</span>
             </div>
             <p className="text-gray-300 mb-6 leading-relaxed">
-              Data analytics que convierte información en acción: datos limpios, dashboards claros y decisiones con confianza.
+              Analítica de datos para decisiones estratégicas: información confiable, dashboards claros y resultados medibles.
             </p>
             <div className="space-y-3">
-              <div className="flex items-center text-gray-300">
+              <a href="mailto:davanegasp1@gmail.com" className="flex items-center text-gray-300 hover:text-blue-400 transition-colors">
                 <Mail className="w-5 h-5 mr-3 text-blue-400" />
-                <span>{content.contact?.email || 'hello@example.com'}</span>
-              </div>
+                <span>davanegasp1@gmail.com</span>
+              </a>
               <div className="flex items-center text-gray-300">
                 <Phone className="w-5 h-5 mr-3 text-blue-400" />
-                <span>+1 (555) 123-4567</span>
+                <span>+57 300 595 4957</span>
               </div>
               <div className="flex items-center text-gray-300">
                 <MapPin className="w-5 h-5 mr-3 text-blue-400" />
@@ -78,7 +100,7 @@ const Footer = () => {
             </div>
             <div className="flex space-x-4 mt-6">
               {socialLinks.map((social) => (
-                <Button key={social.name} onClick={() => navigate('#/about')} variant="ghost" size="sm" className="w-10 h-10 p-0 text-gray-400 hover:text-white hover:bg-blue-600/20 rounded-full">
+                <Button key={social.name} onClick={() => social.name === 'LinkedIn' ? window.open('https://linkedin.com/in/tu-perfil', '_blank') : navigate('#/about')} variant="ghost" size="sm" className="w-10 h-10 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-600/20 rounded-full transition-colors">
                   <social.icon className="w-5 h-5" />
                 </Button>
               ))}
@@ -114,14 +136,23 @@ const Footer = () => {
           </motion.div>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="glass-effect rounded-2xl p-8 mb-12 border border-white/10">
+        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="glass-effect rounded-2xl p-8 mb-12 border border-white/10 bg-white/5 shadow-xl">
           <div className="text-center">
             <h3 className="text-2xl font-bold text-white mb-4">Mantente <span className="gradient-text">Actualizado</span></h3>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">Recibe ideas y recursos de analítica directamente en tu bandeja de entrada.</p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input type="email" placeholder="tu@email.com" className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors" />
-              <Button onClick={() => navigate('#/newsletter')} className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-lg font-semibold">Suscribirse</Button>
-            </div>
+            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">Recibe ideas y recursos exclusivos sobre analítica directamente en tu correo.</p>
+            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+               <div className="flex-1">
+                 <input
+                   type="email"
+                   value={newsletterEmail}
+                   onChange={(e) => setNewsletterEmail(e.target.value)}
+                   placeholder="tu@email.com"
+                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white/15 transition-all duration-300"
+                 />
+                 {newsletterError && <p className="text-red-400 text-xs mt-1">{newsletterError}</p>}
+               </div>
+               <Button type="submit" className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300">Quiero recibir novedades</Button>
+             </form>
           </div>
         </motion.div>
 

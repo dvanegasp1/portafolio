@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Database, LineChart, Workflow, ArrowRight } from 'lucide-react';
+import { BarChart3, Database, LineChart, Workflow, ArrowRight, Zap, Shield, Brain, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useContent } from '@/content/ContentContext.jsx';
 import { supabase } from '@/lib/supabaseClient.js';
 
-const iconMap = { BarChart3, Database, LineChart, Workflow };
+const iconMap = { BarChart3, Database, LineChart, Workflow, Zap, Shield, Brain, Settings };
 
 const SkeletonBlock = ({ className }) => (
   <div className={`animate-pulse rounded bg-white/10 ${className}`} />
@@ -14,10 +14,36 @@ const SkeletonBlock = ({ className }) => (
 const Services = () => {
   const { content, supa } = useContent();
   const loading = supa.loading;
-  const services = Array.isArray(content?.services) ? content.services : [];
-  const heading = content?.servicesHeading || content?.siteName || '';
-  const subheading = content?.servicesSubheading || content?.hero?.subtitle || '';
-  const badgeText = content?.hero?.badge || content?.role || '';
+  const services = Array.isArray(content?.services) ? content.services : [
+    {
+      title: "Automatización & ETL",
+      description: "Pipelines automatizados para mantener datos actualizados y confiables.",
+      icon: "Settings"
+    },
+    {
+      title: "Analítica de Datos & Visualización",
+      description: "Dashboards interactivos que convierten datos en información útil para la toma de decisiones.",
+      icon: "BarChart3"
+    },
+    {
+      title: "Modelos Predictivos & Machine Learning",
+      description: "Algoritmos que anticipan tendencias y optimizan procesos estratégicos.",
+      icon: "Brain"
+    },
+    {
+      title: "Gobierno y Calidad de Datos",
+      description: "Estrategias para garantizar datos seguros, éticos y de alta calidad.",
+      icon: "Shield"
+    },
+    {
+      title: "Consultoría en Analítica Ética y Automatización",
+      description: "Asesoría para implementar soluciones basadas en datos de forma responsable y eficiente.",
+      icon: "Zap"
+    }
+  ];
+  const heading = content?.servicesHeading || "Servicios" || '';
+  const subheading = content?.servicesSubheading || "Soluciones especializadas en analítica de datos y automatización" || '';
+  const badgeText = content?.hero?.badge || "Servicios" || '';
 
   const handleLearnMore = () => {
     const el = document.querySelector('#projects');
@@ -58,7 +84,7 @@ const Services = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {cards.map((service, index) => {
             if (loading) {
               return (
@@ -78,6 +104,17 @@ const Services = () => {
               );
             }
 
+            // Static services with predefined icons
+            const staticServices = [
+              { title: "Automatización & ETL", icon: "Settings" },
+              { title: "Analítica de Datos & Visualización", icon: "BarChart3" },
+              { title: "Modelos Predictivos & Machine Learning", icon: "Brain" },
+              { title: "Gobierno y Calidad de Datos", icon: "Shield" },
+              { title: "Consultoría en Analítica Ética y Automatización", icon: "Zap" }
+            ];
+
+            const staticService = staticServices.find(s => s.title === service.title);
+
             let iconElement;
             if (service.icon_path) {
               let url = service.icon_path;
@@ -86,7 +123,7 @@ const Services = () => {
               }
               iconElement = <img src={url} alt="Service icon" className="w-12 h-12 object-contain" />;
             } else {
-              const Icon = iconMap[service.icon] || BarChart3;
+              const Icon = iconMap[staticService?.icon || service.icon] || BarChart3;
               iconElement = <Icon className="w-12 h-12 text-white" />;
             }
             return (

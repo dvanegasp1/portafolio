@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BarChart3, Brain, Settings, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useContent } from '@/content/ContentContext.jsx';
 
@@ -11,10 +11,35 @@ const SkeletonBlock = ({ className }) => (
 export default function Projects() {
   const { content, supa } = useContent();
   const loading = supa.loading;
-  const projects = Array.isArray(content?.projects) ? content.projects : [];
-  const heading = content?.projectsHeading || content?.siteName || '';
-  const subheading = content?.projectsSubheading || content?.seo?.description || '';
-  const badgeText = content?.hero?.badge || content?.role || '';
+  const projects = Array.isArray(content?.projects) ? content.projects : [
+    {
+      title: "Visualización de Cultura Institucional",
+      description: "Dashboard interactivo para medir indicadores de gestión del conocimiento en la Policía Nacional.",
+      icon: "BarChart3",
+      tags: ["Power BI", "Dashboard", "Gestión del Conocimiento"]
+    },
+    {
+      title: "Modelo Predictivo de Riesgos Ocupacionales",
+      description: "Algoritmo en Python para anticipar riesgos laborales y optimizar la seguridad institucional.",
+      icon: "Brain",
+      tags: ["Python", "Machine Learning", "Seguridad Laboral"]
+    },
+    {
+      title: "Pipeline ETL Automatizado",
+      description: "Integración de datos con KNIME y SQL para mantener información actualizada y confiable.",
+      icon: "Settings",
+      tags: ["KNIME", "SQL", "ETL", "Automatización"]
+    },
+    {
+      title: "Artículo: Rutas de Carrera en la Policía Nacional",
+      description: "Investigación publicada en Revista Logos sobre diseño de trayectorias profesionales usando teoría de grafos.",
+      icon: "FileText",
+      tags: ["Investigación", "Teoría de Grafos", "Carrera Profesional"]
+    }
+  ];
+  const heading = content?.projectsHeading || "Proyectos Destacados" || '';
+  const subheading = content?.projectsSubheading || "Soluciones en analítica de datos, automatización y gestión estratégica." || '';
+  const badgeText = content?.hero?.badge || "Proyectos" || '';
 
   if (!loading && projects.length === 0) {
     return null;
@@ -58,7 +83,7 @@ export default function Projects() {
               whileHover={{ y: -8 }}
               className="group"
             >
-              <div className="glass-effect rounded-2xl p-6 h-full border border-white/10 hover:border-white/20 transition-all">
+              <div className="glass-effect rounded-2xl p-6 h-full border border-white/10 hover:border-white/20 hover:shadow-2xl hover:bg-white/5 transition-all duration-300">
                 {loading ? (
                   <>
                     <SkeletonBlock className="h-6 w-40 mb-4" />
@@ -72,7 +97,17 @@ export default function Projects() {
                   </>
                 ) : (
                   <>
-                    <h3 className="text-2xl font-bold text-white mb-3">{project.title}</h3>
+                    <div className="flex items-center mb-4">
+                      {project.icon && (
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mr-3">
+                          {project.icon === 'BarChart3' && <BarChart3 className="w-5 h-5 text-white" />}
+                          {project.icon === 'Brain' && <Brain className="w-5 h-5 text-white" />}
+                          {project.icon === 'Settings' && <Settings className="w-5 h-5 text-white" />}
+                          {project.icon === 'FileText' && <FileText className="w-5 h-5 text-white" />}
+                        </div>
+                      )}
+                      <h3 className="text-xl font-bold text-white">{project.title}</h3>
+                    </div>
                     <p className="text-gray-300 mb-4">{project.description}</p>
                     <div className="mb-6">
                       {project.tags?.map((t) => (

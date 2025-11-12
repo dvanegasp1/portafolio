@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Award, CheckCircle } from 'lucide-react';
+import { Award, CheckCircle, Code, BarChart3, Zap } from 'lucide-react';
 import { useContent } from '@/content/ContentContext.jsx';
 import { supabase } from '@/lib/supabaseClient.js';
 
@@ -58,10 +58,68 @@ export default function About() {
             <h2 className="text-4xl lg:text-6xl font-bold mb-6">
               {loading ? <SkeletonBlock className="h-10 w-3/4" /> : about.heading}
             </h2>
+<p className="text-xl text-gray-300 mb-8 leading-relaxed">
+  {loading ? <SkeletonBlock className="h-5 w-full" /> : about.description}
+</p>
 
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              {loading ? <SkeletonBlock className="h-5 w-full" /> : about.description}
-            </p>
+<div className="space-y-4 mb-8">
+  <div className="flex items-center">
+    <CheckCircle className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+    <span className="text-gray-300"><span className="text-blue-400 font-semibold">+21 años</span> entendiendo necesidades institucionales</span>
+  </div>
+  <div className="flex items-center">
+    <CheckCircle className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+    <span className="text-gray-300">Maestría en <span className="text-blue-400 font-semibold">Analítica de Datos</span></span>
+  </div>
+  <div className="flex items-center">
+    <div className="flex items-center mr-3">
+      <Code className="w-5 h-5 text-blue-400 mr-1" title="Python" />
+      <BarChart3 className="w-5 h-5 text-blue-400 mr-1" title="Power BI" />
+      <Zap className="w-5 h-5 text-blue-400" title="KNIME" />
+    </div>
+    <span className="text-gray-300">Experiencia en <span className="text-blue-400 font-semibold">Python, Power BI, KNIME</span></span>
+  </div>
+  <div className="flex items-center">
+    <CheckCircle className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+    <span className="text-gray-300">Enfoque en <span className="text-blue-400 font-semibold">analítica ética</span> y <span className="text-blue-400 font-semibold">automatización</span> de procesos</span>
+  </div>
+</div>
+
+<div className="mb-8">
+  <h3 className="text-2xl font-bold mb-4 text-white">Trayectoria Profesional</h3>
+  <div className="space-y-4">
+    <div className="flex items-start">
+      <div className="w-4 h-4 bg-blue-400 rounded-full mt-1 mr-4 flex-shrink-0"></div>
+      <div>
+        <p className="text-gray-300 font-semibold">2003 - Presente</p>
+        <p className="text-gray-400">Especialista en Analítica de Datos y Automatización</p>
+      </div>
+    </div>
+    <div className="flex items-start">
+      <div className="w-4 h-4 bg-blue-400 rounded-full mt-1 mr-4 flex-shrink-0"></div>
+      <div>
+        <p className="text-gray-300 font-semibold">Maestría en Analítica de Datos</p>
+        <p className="text-gray-400">Formación avanzada en técnicas de data science</p>
+      </div>
+    </div>
+    <div className="flex items-start">
+      <div className="w-4 h-4 bg-blue-400 rounded-full mt-1 mr-4 flex-shrink-0"></div>
+      <div>
+        <p className="text-gray-300 font-semibold">Experiencia en múltiples industrias</p>
+        <p className="text-gray-400">Aplicación de analítica ética en sectores diversos</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div className="flex flex-col sm:flex-row gap-4">
+  <button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-full font-semibold transition-colors">
+    Conoce más sobre mi experiencia
+  </button>
+  <button className="border-2 border-blue-500 text-blue-300 hover:bg-blue-500/10 px-6 py-3 rounded-full font-semibold transition-colors">
+    Trabajemos juntos
+  </button>
+</div>
 
             
           </motion.div>

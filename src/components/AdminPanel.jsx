@@ -204,11 +204,12 @@ export default function AdminPanel() {
                 ['branding','Branding'],
                 ['hero','Hero'],
                 ['about','Sobre Mi'],
-                ['visibility','Visibilidad'],
-                ['services','Services JSON'],
-                ['projects','Projects JSON'],
-                ['whyus','Why Us JSON'],
+                ['services','Servicios'],
+                ['projects','Proyectos'],
                 ['contact','Contacto'],
+                ['footer','Footer'],
+                ['visibility','Visibilidad'],
+                ['whyus','Why Us JSON'],
               ].map(([key,label]) => (
                 <button key={key} onClick={() => setTab(key)} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab===key? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{label}</button>
               ))}
@@ -293,31 +294,50 @@ export default function AdminPanel() {
               )}
 
               {tab === 'hero' && (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <Field label="Badge">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.badge} onChange={(e)=>onChange('hero.badge', e.target.value)} />
-                    </Field>
-                    <Field label="Primary CTA Label">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.primaryCta.label} onChange={(e)=>onChange('hero.primaryCta.label', e.target.value)} />
-                    </Field>
-                    <Field label="Primary CTA Href">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.primaryCta.href} onChange={(e)=>onChange('hero.primaryCta.href', e.target.value)} />
-                    </Field>
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <Field label="Título Principal">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.title} onChange={(e)=>onChange('hero.title', e.target.value)} />
+                      </Field>
+                      <Field label="Subtítulo">
+                        <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.subtitle} onChange={(e)=>onChange('hero.subtitle', e.target.value)} />
+                      </Field>
+                      <Field label="Badge">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.badge} onChange={(e)=>onChange('hero.badge', e.target.value)} />
+                      </Field>
+                    </div>
+                    <div>
+                      <Field label="Texto Descriptivo">
+                        <textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.description || ''} onChange={(e)=>onChange('hero.description', e.target.value)} />
+                      </Field>
+                      <Field label="Imagen Principal (sube para reemplazar)">
+                        <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=>setHeroFile(e.target.files?.[0] || null)} />
+                        {draft.hero?.image_path && (
+                          <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.hero.image_path}</div>
+                        )}
+                      </Field>
+                    </div>
                   </div>
-                  <div>
-                    <Field label="Secondary CTA Label">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.label} onChange={(e)=>onChange('hero.secondaryCta.label', e.target.value)} />
-                    </Field>
-                    <Field label="Secondary CTA Href">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.href} onChange={(e)=>onChange('hero.secondaryCta.href', e.target.value)} />
-                    </Field>
-                    <Field label="Hero Image (upload to replace)">
-                      <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=>setHeroFile(e.target.files?.[0] || null)} />
-                      {draft.hero?.image_path && (
-                        <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.hero.image_path}</div>
-                      )}
-                    </Field>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-lg font-semibold mb-3">Botón Primario</h4>
+                      <Field label="Texto del Botón">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.primaryCta.label} onChange={(e)=>onChange('hero.primaryCta.label', e.target.value)} />
+                      </Field>
+                      <Field label="Enlace del Botón">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.primaryCta.href} onChange={(e)=>onChange('hero.primaryCta.href', e.target.value)} />
+                      </Field>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold mb-3">Botón Secundario</h4>
+                      <Field label="Texto del Botón">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.label} onChange={(e)=>onChange('hero.secondaryCta.label', e.target.value)} />
+                      </Field>
+                      <Field label="Enlace del Botón">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.href} onChange={(e)=>onChange('hero.secondaryCta.href', e.target.value)} />
+                      </Field>
+                    </div>
                   </div>
                 </div>
               )}
@@ -367,38 +387,49 @@ export default function AdminPanel() {
               )}
 
               {tab === 'about' && (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <Field label="Heading">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.about.heading} onChange={(e)=>onChange('about.heading', e.target.value)} />
-                    </Field>
-                    <Field label="Description">
-                      <textarea rows={8} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.about.description} onChange={(e)=>onChange('about.description', e.target.value)} />
-                    </Field>
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <Field label="Título de la Sección">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.about.heading} onChange={(e)=>onChange('about.heading', e.target.value)} />
+                      </Field>
+                      <Field label="Texto de Presentación">
+                        <textarea rows={8} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.about.description} onChange={(e)=>onChange('about.description', e.target.value)} />
+                      </Field>
+                    </div>
+                    <div>
+                      <Field label="Foto de Perfil (sube para reemplazar)">
+                        <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=>setAboutFile(e.target.files?.[0] || null)} />
+                        {draft.about?.image_path && (
+                          <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.about.image_path}</div>
+                        )}
+                      </Field>
+                      <div className="text-sm text-gray-300 mb-2">Vista previa</div>
+                      <div className="glass-effect rounded-xl p-4 border border-white/10">
+                        {(() => {
+                          const path = draft.about?.image_path;
+                          let url = null;
+                          if (path) {
+                            if (/^(https?:|data:|blob:)/i.test(path)) url = path;
+                            else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(path).data.publicUrl;
+                          }
+                          return url ? (
+                            <img src={url} alt="About preview" className="w-24 h-24 object-contain" />
+                          ) : (
+                            <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin imagen</div>
+                          );
+                        })()}
+                      </div>
+                    </div>
                   </div>
                   <div>
-                    <Field label="About Image (upload to replace)">
-                      <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=>setAboutFile(e.target.files?.[0] || null)} />
-                      {draft.about?.image_path && (
-                        <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.about.image_path}</div>
-                      )}
+                    <h4 className="text-lg font-semibold mb-3">Lista de Habilidades y Herramientas</h4>
+                    <Field label="Habilidades (separadas por coma)">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(draft.about?.skills || []).join(', ')} onChange={(e)=>onChange('about.skills', e.target.value.split(',').map(s=>s.trim()).filter(Boolean))} />
                     </Field>
-                    <div className="text-sm text-gray-300 mb-2">Vista previa</div>
-                    <div className="glass-effect rounded-xl p-4 border border-white/10">
-                      {(() => {
-                        const path = draft.about?.image_path;
-                        let url = null;
-                        if (path) {
-                          if (/^(https?:|data:|blob:)/i.test(path)) url = path;
-                          else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(path).data.publicUrl;
-                        }
-                        return url ? (
-                          <img src={url} alt="About preview" className="w-24 h-24 object-contain" />
-                        ) : (
-                          <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin imagen</div>
-                        );
-                      })()}
-                    </div>
+                    <Field label="Herramientas (separadas por coma)">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(draft.about?.tools || []).join(', ')} onChange={(e)=>onChange('about.tools', e.target.value.split(',').map(s=>s.trim()).filter(Boolean))} />
+                    </Field>
                   </div>
                 </div>
               )}
@@ -414,127 +445,241 @@ export default function AdminPanel() {
 
               {tab === 'services' && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Services</h3>
+                  <h3 className="text-lg font-semibold mb-4">Servicios</h3>
                   <div className="space-y-4">
                     {draft.services.map((svc, i) => (
                       <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
-                        <div className="grid md:grid-cols-3 gap-3">
-                          <Field label="Icon">
-                            <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
-                              value={svc.icon}
-                              onChange={(e)=>{
-                                const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], icon:v}; return {...d, services:arr};});
-                              }}>
-                              {['BarChart3','Database','LineChart','Workflow'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-                          </Field>
-                          <Field label="Title">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.title}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], title:v}; return {...d, services:arr};}); }} />
-                          </Field>
-                          <Field label="Description">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.description}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], description:v}; return {...d, services:arr};}); }} />
-                          </Field>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <Field label="Título del Servicio">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.title}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], title:v}; return {...d, services:arr};}); }} />
+                            </Field>
+                            <Field label="Descripción">
+                              <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.description}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], description:v}; return {...d, services:arr};}); }} />
+                            </Field>
+                          </div>
+                          <div>
+                            <Field label="Ícono">
+                              <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={svc.icon}
+                                onChange={(e)=>{
+                                  const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], icon:v}; return {...d, services:arr};});
+                                }}>
+                                {['BarChart3','Database','LineChart','Workflow','Zap','Shield','Brain','Settings'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            </Field>
+                            <Field label="Imagen de Ícono (opcional, sube para reemplazar)">
+                              <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setServiceFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
+                              {svc.icon_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {svc.icon_path}</div>}
+                            </Field>
+                          </div>
                         </div>
-                        <Field label="Icon Image (upload to replace)">
-                          <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setServiceFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
-                          {svc.icon_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {svc.icon_path}</div>}
-                        </Field>
                         <div className="text-right mt-2">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, services: d.services.filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, services: d.services.filter((_,idx)=>idx!==i) }))}>Eliminar Servicio</Button>
                         </div>
                       </div>
                     ))}
                   </div>
                   <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, services:[...d.services,{ icon:'BarChart3', title:'', description:''}] }))}>Add Service</Button>
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, services:[...d.services,{ icon:'BarChart3', title:'', description:''}] }))}>Agregar Servicio</Button>
                   </div>
                 </div>
               )}
 
               {tab === 'projects' && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Projects</h3>
+                  <h3 className="text-lg font-semibold mb-4">Proyectos</h3>
                   <div className="space-y-4">
                     {draft.projects.map((p, i) => (
                       <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
-                        <div className="grid md:grid-cols-2 gap-3">
-                          <Field label="Title">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.title}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], title:v}; return {...d, projects:arr};}); }} />
-                          </Field>
-                          <Field label="Link">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.link||''}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], link:v}; return {...d, projects:arr};}); }} />
-                          </Field>
-                          <Field label="Description">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.description}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], description:v}; return {...d, projects:arr};}); }} />
-                          </Field>
-                          <Field label="Tags (comma-separated)">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(p.tags||[]).join(', ')}
-                              onChange={(e)=>{ const arrTags=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], tags:arrTags}; return {...d, projects:arr};}); }} />
-                          </Field>
-                          <Field label="Cover Image">
-                            <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setProjectFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
-                            {p.cover_image_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {p.cover_image_path}</div>}
-                          </Field>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <Field label="Título del Proyecto">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.title}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], title:v}; return {...d, projects:arr};}); }} />
+                            </Field>
+                            <Field label="Descripción">
+                              <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.description}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], description:v}; return {...d, projects:arr};}); }} />
+                            </Field>
+                            <Field label="Enlace (opcional)">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.link||''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], link:v}; return {...d, projects:arr};}); }} />
+                            </Field>
+                          </div>
+                          <div>
+                            <Field label="Etiquetas (separadas por coma)">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(p.tags||[]).join(', ')}
+                                onChange={(e)=>{ const arrTags=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], tags:arrTags}; return {...d, projects:arr};}); }} />
+                            </Field>
+                            <Field label="Ícono Representativo">
+                              <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.icon || 'BarChart3'}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], icon:v}; return {...d, projects:arr};}); }}>
+                                {['BarChart3','Brain','Settings','FileText','Code','Database','LineChart','Workflow'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            </Field>
+                            <Field label="Imagen de Portada (opcional)">
+                              <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setProjectFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
+                              {p.cover_image_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {p.cover_image_path}</div>}
+                            </Field>
+                          </div>
                         </div>
                         <div className="text-right mt-2">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, projects: d.projects.filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, projects: d.projects.filter((_,idx)=>idx!==i) }))}>Eliminar Proyecto</Button>
                         </div>
                       </div>
                     ))}
                   </div>
                   <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, projects:[...d.projects,{ title:'', description:'', tags:[], link:'', cover_image_path:null}] }))}>Add Project</Button>
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, projects:[...d.projects,{ title:'', description:'', tags:[], link:'', icon:'BarChart3', cover_image_path:null}] }))}>Agregar Proyecto</Button>
                   </div>
                 </div>
               )}
 
               {tab === 'contact' && (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Field label="Contact Heading"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contactHeading||''} onChange={(e)=>onChange('contactHeading', e.target.value)} /></Field>
-                  <Field label="Contact Email"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} /></Field>
-                  <Field label="Phone"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.phone||''} onChange={(e)=>onChange('contact.phone', e.target.value)} /></Field>
-                  <Field label="Location"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} /></Field>
-                  <Field label="Hours"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.hours||''} onChange={(e)=>onChange('contact.hours', e.target.value)} /></Field>
-                  <Field label="Note (Description)"><textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.note||''} onChange={(e)=>onChange('contact.note', e.target.value)} /></Field>
-                  <Field label="Schedule URL (Calendly, etc.)"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.scheduleUrl||''} onChange={(e)=>onChange('contact.scheduleUrl', e.target.value)} placeholder="https://calendly.com/usuario/llamada" /></Field>
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <Field label="Título de la Sección">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contactHeading||''} onChange={(e)=>onChange('contactHeading', e.target.value)} />
+                      </Field>
+                      <Field label="Email de Contacto">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} />
+                      </Field>
+                      <Field label="Teléfono">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.phone||''} onChange={(e)=>onChange('contact.phone', e.target.value)} />
+                      </Field>
+                      <Field label="Ubicación">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} />
+                      </Field>
+                    </div>
+                    <div>
+                      <Field label="Horario de Atención">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.hours||''} onChange={(e)=>onChange('contact.hours', e.target.value)} />
+                      </Field>
+                      <Field label="Nota Descriptiva">
+                        <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.note||''} onChange={(e)=>onChange('contact.note', e.target.value)} />
+                      </Field>
+                      <Field label="URL de Agendamiento (Calendly, etc.)">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.scheduleUrl||''} onChange={(e)=>onChange('contact.scheduleUrl', e.target.value)} placeholder="https://calendly.com/usuario/llamada" />
+                      </Field>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold mb-3">Placeholders del Formulario</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <Field label="Placeholder Nombre">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.placeholders?.name || 'Escribe tu nombre'} onChange={(e)=>onChange('contact.placeholders.name', e.target.value)} />
+                      </Field>
+                      <Field label="Placeholder Email">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.placeholders?.email || 'tu@email.com'} onChange={(e)=>onChange('contact.placeholders.email', e.target.value)} />
+                      </Field>
+                      <Field label="Placeholder Empresa">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.placeholders?.company || 'Nombre de tu empresa'} onChange={(e)=>onChange('contact.placeholders.company', e.target.value)} />
+                      </Field>
+                      <Field label="Placeholder Teléfono">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.placeholders?.phone || '+57 300 123 4567'} onChange={(e)=>onChange('contact.placeholders.phone', e.target.value)} />
+                      </Field>
+                      <Field label="Placeholder Mensaje">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.placeholders?.message || 'Cuéntame cómo puedo ayudarte'} onChange={(e)=>onChange('contact.placeholders.message', e.target.value)} />
+                      </Field>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold mb-3">Botones del Formulario</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <Field label="Texto Botón Enviar">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.buttons?.submit || 'Enviar Mensaje'} onChange={(e)=>onChange('contact.buttons.submit', e.target.value)} />
+                      </Field>
+                      <Field label="Texto Botón Agendar">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.buttons?.schedule || 'Agendar Llamada'} onChange={(e)=>onChange('contact.buttons.schedule', e.target.value)} />
+                      </Field>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              {tab === 'whyus' && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Why Us</h3>
-                  <div className="space-y-4">
-                    {draft.whyUs.map((w, i) => (
-                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
-                        <div className="grid md:grid-cols-3 gap-3">
-                          <Field label="Icon">
-                            <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.icon}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], icon:v}; return {...d, whyUs:arr};}); }}>
-                              {['Users','Target'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-                          </Field>
-                          <Field label="Title">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.title}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], title:v}; return {...d, whyUs:arr};}); }} />
-                          </Field>
-                          <Field label="Subtitle">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.subtitle}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], subtitle:v}; return {...d, whyUs:arr};}); }} />
-                          </Field>
-                        </div>
-                        <div className="text-right mt-2">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, whyUs: d.whyUs.filter((_,idx)=>idx!==i) }))}>Remove</Button>
-                        </div>
-                      </div>
-                    ))}
+              {tab === 'footer' && (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-lg font-semibold mb-3">Texto Principal</h4>
+                    <Field label="Descripción del Footer">
+                      <textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.description || 'Analítica de datos para decisiones estratégicas: información confiable, dashboards claros y resultados medibles.'} onChange={(e)=>onChange('footer.description', e.target.value)} />
+                    </Field>
                   </div>
-                  <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, whyUs:[...d.whyUs,{ icon:'Users', title:'', subtitle:''}] }))}>Add Item</Button>
+                  <div>
+                    <h4 className="text-lg font-semibold mb-3">Links de Navegación</h4>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-300 mb-2">Empresa</h5>
+                        <Field label="Link 1">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[0]?.label || 'Sobre mí'} onChange={(e)=>onChange('footer.company.0.label', e.target.value)} />
+                        </Field>
+                        <Field label="Enlace 1">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[0]?.href || '#/about'} onChange={(e)=>onChange('footer.company.0.href', e.target.value)} />
+                        </Field>
+                        <Field label="Link 2">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[1]?.label || 'Proyectos'} onChange={(e)=>onChange('footer.company.1.label', e.target.value)} />
+                        </Field>
+                        <Field label="Enlace 2">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[1]?.href || '#/projects'} onChange={(e)=>onChange('footer.company.1.href', e.target.value)} />
+                        </Field>
+                        <Field label="Link 3">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[2]?.label || 'Contacto'} onChange={(e)=>onChange('footer.company.2.label', e.target.value)} />
+                        </Field>
+                        <Field label="Enlace 3">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[2]?.href || '#/contact'} onChange={(e)=>onChange('footer.company.2.href', e.target.value)} />
+                        </Field>
+                      </div>
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-300 mb-2">Recursos</h5>
+                        <Field label="Link 1">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.resources?.[0]?.label || 'Artículos'} onChange={(e)=>onChange('footer.resources.0.label', e.target.value)} />
+                        </Field>
+                        <Field label="Enlace 1">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.resources?.[0]?.href || '#/articles'} onChange={(e)=>onChange('footer.resources.0.href', e.target.value)} />
+                        </Field>
+                        <Field label="Link 2">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.resources?.[1]?.label || 'Publicaciones'} onChange={(e)=>onChange('footer.resources.1.label', e.target.value)} />
+                        </Field>
+                        <Field label="Enlace 2">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.resources?.[1]?.href || '#/publications'} onChange={(e)=>onChange('footer.resources.1.href', e.target.value)} />
+                        </Field>
+                        <Field label="Link 3">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.resources?.[2]?.label || 'Casos de Estudio'} onChange={(e)=>onChange('footer.resources.2.label', e.target.value)} />
+                        </Field>
+                        <Field label="Enlace 3">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.resources?.[2]?.href || '#/case-studies'} onChange={(e)=>onChange('footer.resources.2.href', e.target.value)} />
+                        </Field>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold mb-3">Redes Sociales</h4>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <Field label="LinkedIn URL">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.social?.linkedin || 'https://linkedin.com/in/tu-perfil'} onChange={(e)=>onChange('footer.social.linkedin', e.target.value)} />
+                      </Field>
+                      <Field label="Twitter URL">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.social?.twitter || '#'} onChange={(e)=>onChange('footer.social.twitter', e.target.value)} />
+                      </Field>
+                      <Field label="Instagram URL">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.social?.instagram || '#'} onChange={(e)=>onChange('footer.social.instagram', e.target.value)} />
+                      </Field>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold mb-3">Suscripción al Newsletter</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <Field label="Texto de la Suscripción">
+                        <textarea rows={2} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.newsletter?.description || 'Recibe ideas y recursos exclusivos sobre analítica directamente en tu correo.'} onChange={(e)=>onChange('footer.newsletter.description', e.target.value)} />
+                      </Field>
+                      <Field label="Texto del Botón">
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.newsletter?.buttonText || 'Quiero recibir novedades'} onChange={(e)=>onChange('footer.newsletter.buttonText', e.target.value)} />
+                      </Field>
+                    </div>
                   </div>
                 </div>
               )}

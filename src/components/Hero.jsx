@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Users, Target } from 'lucide-react';
+import { ArrowRight, Users, Target, Code, Database, BarChart3, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient.js';
 import { useContent } from '@/content/ContentContext.jsx';
 import { Button } from '@/components/ui/button';
@@ -128,19 +128,25 @@ export default function Hero() {
               </div>
             )}
 
-            <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
+            <h1 className="font-bold mb-6 leading-tight">
               {loading ? (
                 <span className="block space-y-3">
                   <SkeletonBlock className="h-12 w-3/4 mx-auto lg:mx-0" />
                   <SkeletonBlock className="h-12 w-1/2 mx-auto lg:mx-0" />
                 </span>
               ) : (
-                <span className="gradient-text block">{title}</span>
+                <div className="gradient-text drop-shadow-lg">
+                  {title.split('. ').map((part, index) => (
+                    <span key={index} className={`block ${index === 0 ? 'text-5xl lg:text-7xl' : 'text-4xl lg:text-6xl'}`}>
+                      {part}{index === 0 ? '.' : ''}
+                    </span>
+                  ))}
+                </div>
               )}
             </h1>
 
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl">
-              {loading ? <SkeletonBlock className="h-5 w-full" /> : subtitle}
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl leading-relaxed">
+              {loading ? <SkeletonBlock className="h-5 w-full" /> : subtitle.split('. ').map((line, index) => <span key={index}>{line}{index === 0 ? '. ' : ''}{index === 0 ? <br /> : ''}</span>)}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -157,20 +163,45 @@ export default function Hero() {
               )}
             </div>
 
+            <div className="mt-8 text-center lg:text-left">
+              <p className="text-lg text-gray-400">+5 años transformando datos en decisiones estratégicas</p>
+              <div className="mt-4 flex justify-center lg:justify-start space-x-4">
+                <Code className="w-8 h-8 text-blue-400" title="Python" />
+                <Database className="w-8 h-8 text-blue-400" title="SQL" />
+                <BarChart3 className="w-8 h-8 text-blue-400" title="Power BI" />
+              </div>
+            </div>
+
             <div className="mt-12 pt-8 border-t border-blue-500/30" />
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="relative mt-[-8rem] ml-[-2rem]">
-            {heroImage ? (
-              <img className="w-full max-h-80 rounded-2xl shadow-2xl object-cover" alt="Hero" src={heroImage} />
-            ) : (
-              <div className="w-full max-h-80 rounded-2xl bg-gradient-to-br from-blue-900/60 to-cyan-900/40 border border-blue-500/20 shadow-2xl" />
-            )}
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="relative"
+            >
+              {heroImage ? (
+                <img className="w-full max-h-80 rounded-2xl shadow-2xl border-2 border-white/20 object-cover" alt="Foto profesional de experto en analítica de datos" src={heroImage} />
+              ) : (
+                <div className="w-full max-h-80 rounded-2xl bg-gradient-to-br from-blue-900/60 to-cyan-900/40 border border-blue-500/20 shadow-2xl" />
+              )}
+            </motion.div>
             {renderWhyCard(whyCards[0], Users, '-top-6 -left-6')}
             {renderWhyCard(whyCards[1], Target, '-bottom-6 -right-6')}
           </motion.div>
         </div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5, duration: 1 }}
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer"
+        onClick={() => scrollTo('#projects')}
+      >
+        <ChevronDown className="w-8 h-8 text-blue-300 animate-bounce" />
+      </motion.div>
     </section>
   );
 }
