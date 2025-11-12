@@ -24,6 +24,8 @@ export default function AdminPanel() {
   const [logoFile, setLogoFile] = useState(null);
   const [aboutFile, setAboutFile] = useState(null);
   const [serviceFiles, setServiceFiles] = useState({});
+  const [teamFiles, setTeamFiles] = useState({});
+  const [testimonialFiles, setTestimonialFiles] = useState({});
 
   useEffect(() => setDraft(content), [content]);
 
@@ -172,6 +174,36 @@ export default function AdminPanel() {
         }
         setServiceFiles({});
       }
+      if (Object.keys(teamFiles).length > 0 && supabase && session && isAdmin) {
+        for (const [idx, file] of Object.entries(teamFiles)) {
+          if (file) {
+            const key = `team/avatars/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
+            const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
+            if (upErr) {
+              toast({ title: 'Error subiendo avatar del equipo', description: upErr.message, variant: 'destructive' });
+            } else {
+              next = { ...next, teamMembers: next.teamMembers.map((m, i) => i == idx ? { ...m, avatar_path: key } : m) };
+              setDraft(next);
+            }
+          }
+        }
+        setTeamFiles({});
+      }
+      if (Object.keys(testimonialFiles).length > 0 && supabase && session && isAdmin) {
+        for (const [idx, file] of Object.entries(testimonialFiles)) {
+          if (file) {
+            const key = `testimonials/avatars/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
+            const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
+            if (upErr) {
+              toast({ title: 'Error subiendo avatar del testimonial', description: upErr.message, variant: 'destructive' });
+            } else {
+              next = { ...next, testimonials: next.testimonials.map((t, i) => i == idx ? { ...t, avatar_path: key } : t) };
+              setDraft(next);
+            }
+          }
+        }
+        setTestimonialFiles({});
+      }
       setContent(next);
       if (supabase) {
         if (session && isAdmin) {
@@ -200,16 +232,17 @@ export default function AdminPanel() {
             <aside className="bg-white/5 p-4 border-r border-white/10">
               <div className="text-sm uppercase tracking-wide text-gray-400 mb-3">Secciones</div>
               {[
-                ['general','General'],
-                ['branding','Branding'],
                 ['hero','Hero'],
-                ['about','Sobre Mi'],
                 ['services','Servicios'],
                 ['projects','Proyectos'],
+                ['about','Sobre Mi'],
+                ['team','Equipo'],
+                ['testimonials','Testimonios'],
                 ['contact','Contacto'],
+                ['general','General'],
+                ['branding','Branding'],
                 ['footer','Footer'],
                 ['visibility','Visibilidad'],
-                ['whyus','Why Us JSON'],
               ].map(([key,label]) => (
                 <button key={key} onClick={() => setTab(key)} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab===key? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{label}</button>
               ))}
@@ -260,39 +293,6 @@ export default function AdminPanel() {
             <div className="p-6">
               <h2 className="text-2xl font-bold mb-4">Admin — Portfolio Settings</h2>
 
-              {tab === 'general' && (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <Field label="Name (siteName)">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.siteName} onChange={(e)=>onChange('siteName', e.target.value)} />
-                    </Field>
-                    <Field label="Role">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.role} onChange={(e)=>onChange('role', e.target.value)} />
-                    </Field>
-                    <Field label="Contact Email">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} />
-                    </Field>
-                    <Field label="Location">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} />
-                    </Field>
-                  </div>
-                  <div>
-                    <Field label="SEO Title">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.seo.title} onChange={(e)=>onChange('seo.title', e.target.value)} />
-                    </Field>
-                    <Field label="SEO Description">
-                      <textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.seo.description} onChange={(e)=>onChange('seo.description', e.target.value)} />
-                    </Field>
-                    <Field label="Hero Title">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.title} onChange={(e)=>onChange('hero.title', e.target.value)} />
-                    </Field>
-                    <Field label="Hero Subtitle">
-                      <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.subtitle} onChange={(e)=>onChange('hero.subtitle', e.target.value)} />
-                    </Field>
-                  </div>
-                </div>
-              )}
-
               {tab === 'hero' && (
                 <div className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
@@ -337,50 +337,6 @@ export default function AdminPanel() {
                       <Field label="Enlace del Botón">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.href} onChange={(e)=>onChange('hero.secondaryCta.href', e.target.value)} />
                       </Field>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {tab === 'branding' && (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <Field label="Logo (sube una imagen para reemplazar)">
-                      <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setLogoFile(e.target.files?.[0] || null)} />
-                      {draft.branding?.logo_path && (
-                        <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.branding.logo_path}</div>
-                      )}
-                      <div className="text-[11px] text-gray-500 mt-1">Si no estás autenticado como Admin, se mostrará una vista local temporal que no persiste tras recargar.</div>
-                    </Field>
-                    <Field label="Logo URL (opcional)">
-                      <input
-                        placeholder="https://... o data:URI"
-                        className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
-                        value={draft.branding?.logo_path || ''}
-                        onChange={(e)=> setDraft(d=> ({...d, branding: { ...(d.branding||{}), logo_path: e.target.value || null }}))}
-                      />
-                      <div className="text-[11px] text-gray-500 mt-1">También puedes pegar un enlace directo al logo. Guardar lo sincroniza si estás en Admin.</div>
-                    </Field>
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={()=> setDraft(d=> ({...d, branding: { ...(d.branding||{}), logo_path: null }}))}>Quitar logo</Button>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-300 mb-2">Vista previa</div>
-                    <div className="glass-effect rounded-xl p-4 border border-white/10">
-                      {(() => {
-                        const path = draft.branding?.logo_path;
-                        let url = null;
-                        if (path) {
-                          if (/^(https?:|data:|blob:)/i.test(path)) url = path;
-                          else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(path).data.publicUrl;
-                        }
-                        return url ? (
-                          <img src={url} alt="Logo preview" className="w-24 h-24 object-contain" />
-                        ) : (
-                          <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin logo</div>
-                        );
-                      })()}
                     </div>
                   </div>
                 </div>
@@ -431,15 +387,6 @@ export default function AdminPanel() {
                       <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(draft.about?.tools || []).join(', ')} onChange={(e)=>onChange('about.tools', e.target.value.split(',').map(s=>s.trim()).filter(Boolean))} />
                     </Field>
                   </div>
-                </div>
-              )}
-
-              {tab === 'visibility' && (
-                <div className="space-y-3">
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.services} onChange={(e)=>onChange('visibility.services', e.target.checked)} /> <span>Show Services</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.projects} onChange={(e)=>onChange('visibility.projects', e.target.checked)} /> <span>Show Projects</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.testimonials} onChange={(e)=>onChange('visibility.testimonials', e.target.checked)} /> <span>Show Testimonials</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.team} onChange={(e)=>onChange('visibility.team', e.target.checked)} /> <span>Show Team</span></label>
                 </div>
               )}
 
@@ -538,6 +485,130 @@ export default function AdminPanel() {
                 </div>
               )}
 
+              {tab === 'team' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Equipo</h3>
+                  <div className="grid md:grid-cols-2 gap-6 mb-4">
+                    <Field label="Título de la Sección">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.teamHeading || ''} onChange={(e)=>onChange('teamHeading', e.target.value)} />
+                    </Field>
+                    <Field label="Subtítulo">
+                      <textarea rows={2} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.teamSubheading || ''} onChange={(e)=>onChange('teamSubheading', e.target.value)} />
+                    </Field>
+                  </div>
+                  <div className="space-y-4">
+                    {(draft.teamMembers || []).map((member, i) => (
+                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <Field label="Nombre">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.name || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], name:v}; return {...d, teamMembers:arr};}); }} />
+                            </Field>
+                            <Field label="Posición">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.position || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], position:v}; return {...d, teamMembers:arr};}); }} />
+                            </Field>
+                            <Field label="Especialización">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.specialization || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], specialization:v}; return {...d, teamMembers:arr};}); }} />
+                            </Field>
+                            <Field label="Experiencia">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.experience || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], experience:v}; return {...d, teamMembers:arr};}); }} />
+                            </Field>
+                          </div>
+                          <div>
+                            <Field label="Descripción">
+                              <textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.description || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], description:v}; return {...d, teamMembers:arr};}); }} />
+                            </Field>
+                            <Field label="Logros (separados por coma)">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(member.achievements || []).join(', ')}
+                                onChange={(e)=>{ const arrAch=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], achievements:arrAch}; return {...d, teamMembers:arr};}); }} />
+                            </Field>
+                            <Field label="Avatar (sube imagen)">
+                              <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setTeamFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
+                              {member.avatar_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {member.avatar_path}</div>}
+                            </Field>
+                          </div>
+                        </div>
+                        <div className="text-right mt-2">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, teamMembers: d.teamMembers.filter((_,idx)=>idx!==i) }))}>Eliminar Miembro</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, teamMembers:[...(d.teamMembers||[]),{ name:'', position:'', specialization:'', experience:'', description:'', achievements:[] }] }))}>Agregar Miembro</Button>
+                  </div>
+                </div>
+              )}
+
+              {tab === 'testimonials' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Testimonios</h3>
+                  <div className="grid md:grid-cols-2 gap-6 mb-4">
+                    <Field label="Título de la Sección">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.testimonialsHeading || ''} onChange={(e)=>onChange('testimonialsHeading', e.target.value)} />
+                    </Field>
+                    <Field label="Subtítulo">
+                      <textarea rows={2} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.testimonialsSubheading || ''} onChange={(e)=>onChange('testimonialsSubheading', e.target.value)} />
+                    </Field>
+                  </div>
+                  <div className="space-y-4">
+                    {(draft.testimonials || []).map((testimonial, i) => (
+                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <Field label="Nombre">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={testimonial.name || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.testimonials]; arr[i]={...arr[i], name:v}; return {...d, testimonials:arr};}); }} />
+                            </Field>
+                            <Field label="Posición">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={testimonial.position || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.testimonials]; arr[i]={...arr[i], position:v}; return {...d, testimonials:arr};}); }} />
+                            </Field>
+                            <Field label="Empresa">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={testimonial.company || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.testimonials]; arr[i]={...arr[i], company:v}; return {...d, testimonials:arr};}); }} />
+                            </Field>
+                            <Field label="Industria">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={testimonial.industry || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.testimonials]; arr[i]={...arr[i], industry:v}; return {...d, testimonials:arr};}); }} />
+                            </Field>
+                            <Field label="Rating (1-5)">
+                              <input type="number" min="1" max="5" className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={testimonial.rating || 5}
+                                onChange={(e)=>{ const v=parseInt(e.target.value)||5; setDraft(d=>{ const arr=[...d.testimonials]; arr[i]={...arr[i], rating:v}; return {...d, testimonials:arr};}); }} />
+                            </Field>
+                          </div>
+                          <div>
+                            <Field label="Texto del Testimonio">
+                              <textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={testimonial.text || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.testimonials]; arr[i]={...arr[i], text:v}; return {...d, testimonials:arr};}); }} />
+                            </Field>
+                            <Field label="Resultado">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={testimonial.result || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.testimonials]; arr[i]={...arr[i], result:v}; return {...d, testimonials:arr};}); }} />
+                            </Field>
+                            <Field label="Avatar (sube imagen)">
+                              <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setTestimonialFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
+                              {testimonial.avatar_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {testimonial.avatar_path}</div>}
+                            </Field>
+                          </div>
+                        </div>
+                        <div className="text-right mt-2">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, testimonials: d.testimonials.filter((_,idx)=>idx!==i) }))}>Eliminar Testimonio</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, testimonials:[...(d.testimonials||[]),{ name:'', position:'', company:'', industry:'', rating:5, text:'', result:'' }] }))}>Agregar Testimonio</Button>
+                  </div>
+                </div>
+              )}
+
               {tab === 'contact' && (
                 <div className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
@@ -596,6 +667,83 @@ export default function AdminPanel() {
                       <Field label="Texto Botón Agendar">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.buttons?.schedule || 'Agendar Llamada'} onChange={(e)=>onChange('contact.buttons.schedule', e.target.value)} />
                       </Field>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {tab === 'general' && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Field label="Name (siteName)">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.siteName} onChange={(e)=>onChange('siteName', e.target.value)} />
+                    </Field>
+                    <Field label="Role">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.role} onChange={(e)=>onChange('role', e.target.value)} />
+                    </Field>
+                    <Field label="Contact Email">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} />
+                    </Field>
+                    <Field label="Location">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} />
+                    </Field>
+                  </div>
+                  <div>
+                    <Field label="SEO Title">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.seo.title} onChange={(e)=>onChange('seo.title', e.target.value)} />
+                    </Field>
+                    <Field label="SEO Description">
+                      <textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.seo.description} onChange={(e)=>onChange('seo.description', e.target.value)} />
+                    </Field>
+                    <Field label="Hero Title">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.title} onChange={(e)=>onChange('hero.title', e.target.value)} />
+                    </Field>
+                    <Field label="Hero Subtitle">
+                      <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.subtitle} onChange={(e)=>onChange('hero.subtitle', e.target.value)} />
+                    </Field>
+                  </div>
+                </div>
+              )}
+
+              {tab === 'branding' && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Field label="Logo (sube una imagen para reemplazar)">
+                      <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setLogoFile(e.target.files?.[0] || null)} />
+                      {draft.branding?.logo_path && (
+                        <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.branding.logo_path}</div>
+                      )}
+                      <div className="text-[11px] text-gray-500 mt-1">Si no estás autenticado como Admin, se mostrará una vista local temporal que no persiste tras recargar.</div>
+                    </Field>
+                    <Field label="Logo URL (opcional)">
+                      <input
+                        placeholder="https://... o data:URI"
+                        className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                        value={draft.branding?.logo_path || ''}
+                        onChange={(e)=> setDraft(d=> ({...d, branding: { ...(d.branding||{}), logo_path: e.target.value || null }}))}
+                      />
+                      <div className="text-[11px] text-gray-500 mt-1">También puedes pegar un enlace directo al logo. Guardar lo sincroniza si estás en Admin.</div>
+                    </Field>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={()=> setDraft(d=> ({...d, branding: { ...(d.branding||{}), logo_path: null }}))}>Quitar logo</Button>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-300 mb-2">Vista previa</div>
+                    <div className="glass-effect rounded-xl p-4 border border-white/10">
+                      {(() => {
+                        const path = draft.branding?.logo_path;
+                        let url = null;
+                        if (path) {
+                          if (/^(https?:|data:|blob:)/i.test(path)) url = path;
+                          else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(path).data.publicUrl;
+                        }
+                        return url ? (
+                          <img src={url} alt="Logo preview" className="w-24 h-24 object-contain" />
+                        ) : (
+                          <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin logo</div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -681,6 +829,15 @@ export default function AdminPanel() {
                       </Field>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {tab === 'visibility' && (
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.services} onChange={(e)=>onChange('visibility.services', e.target.checked)} /> <span>Show Services</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.projects} onChange={(e)=>onChange('visibility.projects', e.target.checked)} /> <span>Show Projects</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.testimonials} onChange={(e)=>onChange('visibility.testimonials', e.target.checked)} /> <span>Show Testimonials</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.team} onChange={(e)=>onChange('visibility.team', e.target.checked)} /> <span>Show Team</span></label>
                 </div>
               )}
 
