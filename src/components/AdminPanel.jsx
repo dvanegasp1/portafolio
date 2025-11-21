@@ -24,8 +24,6 @@ export default function AdminPanel() {
   const [logoFile, setLogoFile] = useState(null);
   const [aboutFile, setAboutFile] = useState(null);
   const [serviceFiles, setServiceFiles] = useState({});
-  const [teamFiles, setTeamFiles] = useState({});
-  const [testimonialFiles, setTestimonialFiles] = useState({});
 
   useEffect(() => setDraft(content), [content]);
 
@@ -81,6 +79,47 @@ export default function AdminPanel() {
       }
     } catch (e) {
       toast({ title: 'Error', description: 'No se pudieron guardar los cambios.', variant: 'destructive' });
+    }
+  };
+  
+  // Save current tab only: run uploads via handleSave, then scoped DB write
+  const handleSaveScoped = async () => {
+    await handleSave();
+    try {
+      if (supabase && session && isAdmin) {
+        const scopesByTab = {
+          general: ['site','seo','contact'],
+          branding: ['site'],
+          hero: ['hero'],
+          about: ['about'],
+          services: ['services'],
+          projects: ['projects'],
+          whyus: ['why_us'],
+          visibility: ['visibility'],
+          contact: ['contact'],
+          resume: ['education','experience','visibility','resume'],
+          blog: ['blog'],
+        };
+        const scopes = scopesByTab[tab] || ['all'];
+        const { error } = await saveToSupabase(draft, scopes);
+        if (error) {
+          toast({ title: 'Sync parcial falló', description: error.message || String(error), variant: 'destructive' });
+        } else {
+          toast({ title: 'Guardado', description: 'Se guardó solo la sección actual.' });
+          if (tab === 'blog' && removedBlogSlugs.length) {
+            try {
+              const { error: delErr } = await supabase.from('blog_posts').delete().eq('site_id', 1).in('slug', removedBlogSlugs);
+              if (delErr) {
+                toast({ title: 'No se pudieron eliminar algunas entradas', description: delErr.message, variant: 'destructive' });
+              } else {
+                setRemovedBlogSlugs([]);
+              }
+            } catch (_) {}
+          }
+        }
+      }
+    } catch (e) {
+      // already notified by inner calls
     }
   };
 
@@ -205,19 +244,8 @@ export default function AdminPanel() {
         setTestimonialFiles({});
       }
       setContent(next);
-      if (supabase) {
-        if (session && isAdmin) {
-          const { error } = await saveToSupabase(next);
-          if (error) toast({ title: 'Guardado local', description: 'Sincronización con Supabase falló: ' + error.message, variant: 'default' });
-          else toast({ title: 'Guardado', description: 'Cambios aplicados y sincronizados con Supabase.' });
-        } else if (session && !isAdmin) {
-          toast({ title: 'Guardado local', description: 'Tu sesión no pertenece al grupo Admin. Pide acceso para sincronizar.', variant: 'default' });
-        } else {
-          toast({ title: 'Guardado local', description: 'Inicia sesión para sincronizar con Supabase.', variant: 'default' });
-        }
-      } else {
-        toast({ title: 'Guardado', description: 'Cambios aplicados localmente.' });
-      }
+      // Solo aplicar localmente; requerir botón "Guardar" para sincronizar con Supabase.
+      toast({ title: 'Cambios preparados', description: 'Los cambios se aplicaron localmente. Pulsa "Guardar" para sincronizar con Supabase.' });
     } catch (e) {
       toast({ title: 'Error', description: 'No se pudieron guardar los cambios.', variant: 'destructive' });
     }
@@ -243,6 +271,10 @@ export default function AdminPanel() {
                 ['branding','Branding'],
                 ['footer','Footer'],
                 ['visibility','Visibilidad'],
+                ['services','Services JSON'],
+                ['projects','Projects JSON'],
+                ['whyus','Why Us JSON'],
+                ['contact','Contacto'],
               ].map(([key,label]) => (
                 <button key={key} onClick={() => setTab(key)} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab===key? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{label}</button>
               ))}
@@ -705,6 +737,36 @@ export default function AdminPanel() {
                 </div>
               )}
 
+              {tab === 'hero' && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Field label="Badge">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.badge} onChange={(e)=>onChange('hero.badge', e.target.value)} />
+                    </Field>
+                    <Field label="Primary CTA Label">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.primaryCta.label} onChange={(e)=>onChange('hero.primaryCta.label', e.target.value)} />
+                    </Field>
+                    <Field label="Primary CTA Href">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.primaryCta.href} onChange={(e)=>onChange('hero.primaryCta.href', e.target.value)} />
+                    </Field>
+                  </div>
+                  <div>
+                    <Field label="Secondary CTA Label">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.label} onChange={(e)=>onChange('hero.secondaryCta.label', e.target.value)} />
+                    </Field>
+                    <Field label="Secondary CTA Href">
+                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.href} onChange={(e)=>onChange('hero.secondaryCta.href', e.target.value)} />
+                    </Field>
+                    <Field label="Hero Image (upload to replace)">
+                      <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=>setHeroFile(e.target.files?.[0] || null)} />
+                      {draft.hero?.image_path && (
+                        <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.hero.image_path}</div>
+                      )}
+                    </Field>
+                  </div>
+                </div>
+              )}
+
               {tab === 'branding' && (
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
@@ -838,11 +900,135 @@ export default function AdminPanel() {
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.projects} onChange={(e)=>onChange('visibility.projects', e.target.checked)} /> <span>Show Projects</span></label>
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.testimonials} onChange={(e)=>onChange('visibility.testimonials', e.target.checked)} /> <span>Show Testimonials</span></label>
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.team} onChange={(e)=>onChange('visibility.team', e.target.checked)} /> <span>Show Team</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.resume} onChange={(e)=>onChange('visibility.resume', e.target.checked)} /> <span>Show Resume</span></label>
+                </div>
+              )}
+
+              {tab === 'services' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Services</h3>
+                  <div className="space-y-4">
+                    {draft.services.map((svc, i) => (
+                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-3 gap-3">
+                          <Field label="Icon">
+                            <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                              value={svc.icon}
+                              onChange={(e)=>{
+                                const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], icon:v}; return {...d, services:arr};});
+                              }}>
+                              {['BarChart3','Database','LineChart','Workflow'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          </Field>
+                          <Field label="Title">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.title}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], title:v}; return {...d, services:arr};}); }} />
+                          </Field>
+                          <Field label="Description">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.description}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], description:v}; return {...d, services:arr};}); }} />
+                          </Field>
+                        </div>
+                        <Field label="Icon Image (upload to replace)">
+                          <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setServiceFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
+                          {svc.icon_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {svc.icon_path}</div>}
+                        </Field>
+                        <div className="text-right mt-2">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, services: d.services.filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, services:[...d.services,{ icon:'BarChart3', title:'', description:''}] }))}>Add Service</Button>
+                  </div>
+                </div>
+              )}
+
+              {tab === 'projects' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Projects</h3>
+                  <div className="space-y-4">
+                    {draft.projects.map((p, i) => (
+                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-2 gap-3">
+                          <Field label="Title">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.title}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], title:v}; return {...d, projects:arr};}); }} />
+                          </Field>
+                          <Field label="Link">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.link||''}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], link:v}; return {...d, projects:arr};}); }} />
+                          </Field>
+                          <Field label="Description">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.description}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], description:v}; return {...d, projects:arr};}); }} />
+                          </Field>
+                          <Field label="Tags (comma-separated)">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(p.tags||[]).join(', ')}
+                              onChange={(e)=>{ const arrTags=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], tags:arrTags}; return {...d, projects:arr};}); }} />
+                          </Field>
+                          <Field label="Cover Image">
+                            <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setProjectFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
+                            {p.cover_image_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {p.cover_image_path}</div>}
+                          </Field>
+                        </div>
+                        <div className="text-right mt-2">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, projects: d.projects.filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, projects:[...d.projects,{ title:'', description:'', tags:[], link:'', cover_image_path:null}] }))}>Add Project</Button>
+                  </div>
+                </div>
+              )}
+
+              {tab === 'contact' && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Field label="Contact Email"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} /></Field>
+                  <Field label="Location"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} /></Field>
+                  <Field label="Schedule URL (Calendly, etc.)"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.scheduleUrl||''} onChange={(e)=>onChange('contact.scheduleUrl', e.target.value)} placeholder="https://calendly.com/usuario/llamada" /></Field>
+                </div>
+              )}
+
+              {tab === 'whyus' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Why Us</h3>
+                  <div className="space-y-4">
+                    {draft.whyUs.map((w, i) => (
+                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-3 gap-3">
+                          <Field label="Icon">
+                            <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.icon}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], icon:v}; return {...d, whyUs:arr};}); }}>
+                              {['Users','Target'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          </Field>
+                          <Field label="Title">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.title}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], title:v}; return {...d, whyUs:arr};}); }} />
+                          </Field>
+                          <Field label="Subtitle">
+                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.subtitle}
+                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], subtitle:v}; return {...d, whyUs:arr};}); }} />
+                          </Field>
+                        </div>
+                        <div className="text-right mt-2">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, whyUs: d.whyUs.filter((_,idx)=>idx!==i) }))}>Remove</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, whyUs:[...d.whyUs,{ icon:'Users', title:'', subtitle:''}] }))}>Add Item</Button>
+                  </div>
                 </div>
               )}
 
               <div className="flex gap-3 mt-6">
-                <Button onClick={handleSave} className="bg-blue-600 text-white">Save</Button>
+                <Button onClick={handleSaveScoped} className="bg-blue-600 text-white">Save</Button>
                 <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
                 <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
               </div>

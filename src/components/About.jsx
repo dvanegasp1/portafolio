@@ -163,9 +163,9 @@ export default function About() {
               ) : (
                 <div className="hidden lg:block absolute -bottom-6 -right-6">
                   <div className="glass-effect rounded-xl px-3 py-2.5 border border-white/10 shadow-lg backdrop-blur-xl">
-                    <p className="text-[9px] tracking-[0.35em] uppercase text-blue-200/80">Insights</p>
-                    <p className="text-[11px] font-semibold text-white mt-1.5 leading-tight">{primaryHighlight}</p>
-                    {secondaryHighlight && <p className="text-[10px] text-gray-300 mt-1">{secondaryHighlight}</p>}
+                    <p className="text-[20px] tracking-[0.35em] uppercase text-blue-200/80">Insights</p>
+                    <p className="text-[16px] font-semibold text-white mt-1.5 leading-tight">{primaryHighlight}</p>
+                    {secondaryHighlight && <p className="text-[14px] text-gray-300 mt-1">{secondaryHighlight}</p>}
                   </div>
                 </div>
               )}

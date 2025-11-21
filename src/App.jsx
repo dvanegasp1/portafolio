@@ -4,7 +4,11 @@ import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Services from '@/components/Services';
+import Resume from '@/components/Resume.jsx';
+import ServiceDetail from '@/pages/ServiceDetail.jsx';
 import Projects from '@/components/Projects';
+import Blog from '@/pages/Blog.jsx';
+import BlogPost from '@/pages/BlogPost.jsx';
 import About from '@/components/About';
 import Team from '@/components/Team';
 import Testimonials from '@/components/Testimonials';
@@ -32,6 +36,13 @@ function AppInner() {
     if (hash.startsWith('#/')) return hash.slice(2); // e.g. services, projects
     return 'home';
   }, [hash, isAdmin]);
+
+  // Redirect away from disabled simple pages
+  useEffect(() => {
+    if (['careers', 'webinars', 'newsletter', 'help'].includes(route)) {
+      window.location.hash = '#';
+    }
+  }, [route]);
 
   const seoTitle = content?.seo?.title || content?.siteName || '';
   const seoDescription = content?.seo?.description || '';
@@ -78,21 +89,17 @@ function AppInner() {
             <Hero />
             <About />
             {content.visibility.services && <Services />}
+            {content.visibility.resume && <Resume />}
             {content.visibility.projects && <Projects />}
             {content.visibility.team && <Team />}
             {content.visibility.testimonials && <Testimonials />}
             <Contact />
           </>
-        )}
-
-        {route === 'services' && <Services />}
+        )}        {route.startsWith('services/') && <ServiceDetail slug={route.slice('services/'.length)} />}
         {route === 'projects' && <Projects />}
         {route === 'about' && <About />}
-        {route === 'blog' && (
-          <SimplePage title="Blog" subtitle="Notas y aprendizajes sobre análisis de datos.">
-            <p>Próximamente: artículos sobre BI, modelado de datos, visualización, y automatización.</p>
-          </SimplePage>
-        )}
+        {route === 'blog' && (<Blog />)}
+        {route.startsWith('blog/') && (<BlogPost slug={route.slice('blog/'.length)} />)}
         {route === 'careers' && (
           <SimplePage title="Carreras" subtitle="Colaboraciones y oportunidades de proyecto.">
             <p>¿Tienes un reto de datos? Escríbeme en la sección de contacto con detalles de objetivos y plazos.</p>
@@ -142,3 +149,8 @@ export default function App() {
     </ContentProvider>
   );
 }
+
+
+
+
+
