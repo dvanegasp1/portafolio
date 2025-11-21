@@ -9,7 +9,7 @@ const WelcomeMessage = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.5 }}
     >
-      Hello there! I'm <span className='font-semibold text-purple-300'>Horizons</span>, your AI coding companion.
+      Hello there! I'm your AI coding companion.
       I'm here to help you build amazing web application!
     </motion.p>
   );
