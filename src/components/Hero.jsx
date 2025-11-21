@@ -184,7 +184,7 @@ export default function Hero() {
 
           <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="relative">
             {heroImage ? (
-              <img className="w-full h-auto rounded-2xl shadow-2xl object-cover" alt="Hero" src={heroImage} />
+              <img className="w-full h-auto rounded-2xl shadow-2xl object-cover" alt="Imagen principal del sitio" src={heroImage} />
             ) : (
               <div className="w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-blue-900/60 to-cyan-900/40 border border-blue-500/20 shadow-2xl" />
             )}

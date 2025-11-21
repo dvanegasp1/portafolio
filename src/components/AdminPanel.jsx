@@ -11,6 +11,14 @@ const Field = ({ label, children }) => (
   </label>
 );
 
+const resolveStorageUrl = (path) => {
+  if (!path) return null;
+  if (/^(https?:|data:|blob:)/i.test(path)) return path;
+  if (!supabase) return null;
+  const { data } = supabase.storage.from('portfolio-assets').getPublicUrl(path);
+  return data?.publicUrl || null;
+};
+
 export default function AdminPanel() {
   const { content, setContent, resetContent, saveToSupabase, supa } = useContent();
   const [draft, setDraft] = useState(content);
@@ -24,6 +32,42 @@ export default function AdminPanel() {
   const [logoFile, setLogoFile] = useState(null);
   const [aboutFile, setAboutFile] = useState(null);
   const [serviceFiles, setServiceFiles] = useState({});
+  const [testimonialFiles, setTestimonialFiles] = useState({});
+  const [openService, setOpenService] = useState(null);
+  const [showServiceNav, setShowServiceNav] = useState(false);
+
+  const servicesToRender = () => {
+    if (openService === null) {
+      return (draft.services || []).map((svc, idx) => ({ svc, idx }));
+    }
+    const svc = draft.services?.[openService];
+    return svc ? [{ svc, idx: openService }] : [];
+  };
+
+  const parseDateValue = (value) => {
+    if (!value) return -Infinity;
+    const str = String(value).trim();
+    if (/actual|curso/i.test(str)) return Number.MAX_SAFE_INTEGER;
+    const digits = str.replace(/[^0-9]/g, '');
+    if (!digits) return -Infinity;
+    return Number(digits.padEnd(8, '0'));
+  };
+
+  const sortResumeEntries = (list) =>
+    (Array.isArray(list) ? list : [])
+      .map((entry, idx) => ({
+        entry,
+        idx,
+        key: parseDateValue(entry?.end) !== -Infinity ? parseDateValue(entry?.end) : parseDateValue(entry?.start),
+      }))
+      .sort((a, b) => b.key - a.key);
+
+  // Abrir el primer servicio por defecto
+  useEffect(() => {
+    if (openService === null && Array.isArray(draft.services) && draft.services.length > 0) {
+      setOpenService(0);
+    }
+  }, [draft.services, openService]);
 
   useEffect(() => setDraft(content), [content]);
 
@@ -56,10 +100,10 @@ export default function AdminPanel() {
     return () => { cancelled = true; };
   }, [session]);
 
+  // (Legacy) save full draft – kept for reference; primary flow uses handleSaveScoped
   const save = () => {
     try {
       setContent(draft);
-      // Try saving to Supabase if configured
       if (supabase) {
         if (session && isAdmin) {
           saveToSupabase(draft).then(({ error }) => {
@@ -78,13 +122,19 @@ export default function AdminPanel() {
         toast({ title: 'Guardado', description: 'Cambios aplicados localmente.' });
       }
     } catch (e) {
-      toast({ title: 'Error', description: 'No se pudieron guardar los cambios.', variant: 'destructive' });
+      console.error('Error al guardar cambios:', e);
+      const desc = e?.message ? `No se pudieron guardar los cambios: ${e.message}` : 'No se pudieron guardar los cambios.';
+      toast({ title: 'Error', description: desc, variant: 'destructive' });
     }
   };
-  
+
   // Save current tab only: run uploads via handleSave, then scoped DB write
   const handleSaveScoped = async () => {
-    await handleSave();
+    const { errors } = await handleSave();
+    if (errors && errors.length) {
+      toast({ title: 'Error', description: errors.join(' | '), variant: 'destructive' });
+      return;
+    }
     try {
       if (supabase && session && isAdmin) {
         const scopesByTab = {
@@ -103,19 +153,9 @@ export default function AdminPanel() {
         const scopes = scopesByTab[tab] || ['all'];
         const { error } = await saveToSupabase(draft, scopes);
         if (error) {
-          toast({ title: 'Sync parcial falló', description: error.message || String(error), variant: 'destructive' });
+          toast({ title: 'Sync parcial fall?', description: error.message || String(error), variant: 'destructive' });
         } else {
-          toast({ title: 'Guardado', description: 'Se guardó solo la sección actual.' });
-          if (tab === 'blog' && removedBlogSlugs.length) {
-            try {
-              const { error: delErr } = await supabase.from('blog_posts').delete().eq('site_id', 1).in('slug', removedBlogSlugs);
-              if (delErr) {
-                toast({ title: 'No se pudieron eliminar algunas entradas', description: delErr.message, variant: 'destructive' });
-              } else {
-                setRemovedBlogSlugs([]);
-              }
-            } catch (_) {}
-          }
+          toast({ title: 'Guardado', description: 'Se guard? solo la secci?n actual.' });
         }
       }
     } catch (e) {
@@ -138,20 +178,21 @@ export default function AdminPanel() {
     });
   };
 
-  // Upload hero/logo images (if selected) then save changes (including Supabase sync)
+  // Upload hero/logo images (if selected) then save changes locally; return errors if any
   const handleSave = async () => {
+    const errors = [];
+    let next = draft;
     try {
-      let next = draft;
-      // Upload logo first so it’s available in the same save
+      // Upload logo first so it?s available in the same save
       if (logoFile) {
         let setLocalUrl = false;
         if (supabase) {
           const key = `branding/logo/${Date.now()}-${logoFile.name}`.replace(/\s+/g, '-');
           const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, logoFile, { upsert: true });
           if (upErr) {
-            // Fallback to data URL for local preview
             setLocalUrl = true;
-            toast({ title: 'No se pudo subir a Supabase', description: upErr.message + '. Se usará vista local temporal.', variant: 'default' });
+            errors.push(upErr.message || 'No se pudo subir logo a Supabase');
+            toast({ title: 'No se pudo subir a Supabase', description: upErr.message + '. Se usar?a vista local temporal.', variant: 'default' });
           } else {
             next = { ...next, branding: { ...(next.branding||{}), logo_path: key } };
             setDraft(next);
@@ -170,8 +211,8 @@ export default function AdminPanel() {
             const dataUrl = await fileToDataUrl(logoFile);
             next = { ...next, branding: { ...(next.branding||{}), logo_path: String(dataUrl) } };
             setDraft(next);
-          } catch (_) {
-            // ignore
+          } catch (err) {
+            errors.push(err?.message || 'No se pudo generar vista local del logo');
           }
         }
         setLogoFile(null);
@@ -180,6 +221,7 @@ export default function AdminPanel() {
         const key = `hero/${Date.now()}-${heroFile.name}`.replace(/\s+/g, '-');
         const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, heroFile, { upsert: true });
         if (upErr) {
+          errors.push(upErr.message || 'No se pudo subir hero');
           toast({ title: 'Error subiendo imagen', description: upErr.message, variant: 'destructive' });
         } else {
           next = { ...draft, hero: { ...draft.hero, image_path: key } };
@@ -191,6 +233,7 @@ export default function AdminPanel() {
         const key = `about/${Date.now()}-${aboutFile.name}`.replace(/\s+/g, '-');
         const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, aboutFile, { upsert: true });
         if (upErr) {
+          errors.push(upErr.message || 'No se pudo subir about');
           toast({ title: 'Error subiendo imagen', description: upErr.message, variant: 'destructive' });
         } else {
           next = { ...draft, about: { ...draft.about, image_path: key } };
@@ -204,39 +247,28 @@ export default function AdminPanel() {
             const key = `services/icons/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
             const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
             if (upErr) {
+              errors.push(upErr.message || 'No se pudo subir icono de servicio');
               toast({ title: 'Error subiendo imagen de icono', description: upErr.message, variant: 'destructive' });
             } else {
-              next = { ...next, services: next.services.map((s, i) => i == idx ? { ...s, icon_path: key } : s) };
+              const servicesSafe = Array.isArray(next.services) ? next.services : [];
+              next = { ...next, services: servicesSafe.map((s, i) => i == idx ? { ...s, icon_path: key } : s) };
               setDraft(next);
             }
           }
         }
         setServiceFiles({});
       }
-      if (Object.keys(teamFiles).length > 0 && supabase && session && isAdmin) {
-        for (const [idx, file] of Object.entries(teamFiles)) {
-          if (file) {
-            const key = `team/avatars/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
-            const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
-            if (upErr) {
-              toast({ title: 'Error subiendo avatar del equipo', description: upErr.message, variant: 'destructive' });
-            } else {
-              next = { ...next, teamMembers: next.teamMembers.map((m, i) => i == idx ? { ...m, avatar_path: key } : m) };
-              setDraft(next);
-            }
-          }
-        }
-        setTeamFiles({});
-      }
-      if (Object.keys(testimonialFiles).length > 0 && supabase && session && isAdmin) {
+      if (testimonialFiles && Object.keys(testimonialFiles).length > 0 && supabase && session && isAdmin) {
         for (const [idx, file] of Object.entries(testimonialFiles)) {
           if (file) {
             const key = `testimonials/avatars/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
             const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
             if (upErr) {
+              errors.push(upErr.message || 'No se pudo subir avatar');
               toast({ title: 'Error subiendo avatar del testimonial', description: upErr.message, variant: 'destructive' });
             } else {
-              next = { ...next, testimonials: next.testimonials.map((t, i) => i == idx ? { ...t, avatar_path: key } : t) };
+              const testimonialsSafe = Array.isArray(next.testimonials) ? next.testimonials : [];
+              next = { ...next, testimonials: testimonialsSafe.map((t, i) => i == idx ? { ...t, avatar_path: key } : t) };
               setDraft(next);
             }
           }
@@ -244,12 +276,17 @@ export default function AdminPanel() {
         setTestimonialFiles({});
       }
       setContent(next);
-      // Solo aplicar localmente; requerir botón "Guardar" para sincronizar con Supabase.
-      toast({ title: 'Cambios preparados', description: 'Los cambios se aplicaron localmente. Pulsa "Guardar" para sincronizar con Supabase.' });
+      if (!errors.length) {
+        toast({ title: 'Cambios preparados', description: 'Los cambios se aplicaron localmente. Pulsa "Guardar" para sincronizar con Supabase.' });
+      }
     } catch (e) {
-      toast({ title: 'Error', description: 'No se pudieron guardar los cambios.', variant: 'destructive' });
+      console.error('Error al guardar cambios:', e);
+      errors.push(e?.message || 'Error desconocido al guardar');
     }
+    return { errors };
   };
+
+
 
   return (
     <div className="fixed inset-0 z-[1000] bg-slate-900/90 backdrop-blur overflow-auto">
@@ -259,25 +296,41 @@ export default function AdminPanel() {
             {/* Sidebar */}
             <aside className="bg-white/5 p-4 border-r border-white/10">
               <div className="text-sm uppercase tracking-wide text-gray-400 mb-3">Secciones</div>
-              {[
-                ['hero','Hero'],
-                ['services','Servicios'],
-                ['projects','Proyectos'],
-                ['about','Sobre Mi'],
-                ['team','Equipo'],
-                ['testimonials','Testimonios'],
-                ['contact','Contacto'],
-                ['general','General'],
-                ['branding','Branding'],
-                ['footer','Footer'],
-                ['visibility','Visibilidad'],
-                ['services','Services JSON'],
-                ['projects','Projects JSON'],
-                ['whyus','Why Us JSON'],
-                ['contact','Contacto'],
-              ].map(([key,label]) => (
-                <button key={key} onClick={() => setTab(key)} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab===key? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{label}</button>
-              ))}
+
+              <button onClick={() => setTab('hero')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='hero'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Hero</button>
+              <button onClick={() => setTab('about')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='about'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Sobre Mi</button>
+
+              <div className="mb-1">
+                <button
+                  onClick={() => { setTab('services'); setShowServiceNav((v) => !v); }}
+                  className={`w-full text-left px-3 py-2 rounded ${tab==='services'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}
+                >
+                  Servicios {showServiceNav ? '▾' : '▸'}
+                </button>
+                {showServiceNav && (
+                  <div className="mt-1 ml-3 space-y-1">
+                    {(draft.services || []).map((svc, i) => (
+                      <button
+                        key={`svc-nav-${i}-${svc.title || i}`}
+                        onClick={() => { setTab('services'); setOpenService(i); }}
+                        className={`block w-full text-left px-2 py-1 rounded text-sm ${openService===i ? 'bg-blue-600/20 text-white' : 'text-gray-400 hover:bg-white/10'}`}
+                      >
+                        {svc.title?.trim() || `Servicio ${i+1}`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button onClick={() => setTab('experience')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='experience'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Experiencia</button>
+              <button onClick={() => setTab('education')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='education'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Educación</button>
+              <button onClick={() => setTab('contact')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='contact'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Contacto</button>
+              <button onClick={() => setTab('projects')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='projects'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Proyectos</button>
+              <button onClick={() => setTab('testimonials')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='testimonials'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Testimonios</button>
+              <button onClick={() => setTab('general')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='general'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>General</button>
+              <button onClick={() => setTab('branding')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='branding'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Branding</button>
+              <button onClick={() => setTab('footer')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='footer'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Footer</button>
+              <button onClick={() => setTab('visibility')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='visibility'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Visibilidad</button>
 
               {/* Auth box */}
               <div className="mt-6 p-3 rounded bg-white/5 border border-white/10">
@@ -346,7 +399,14 @@ export default function AdminPanel() {
                       <Field label="Imagen Principal (sube para reemplazar)">
                         <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=>setHeroFile(e.target.files?.[0] || null)} />
                         {draft.hero?.image_path && (
-                          <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.hero.image_path}</div>
+                          <div className="mt-2 space-y-2 text-[11px] text-gray-400">
+                            <div>Actual: {draft.hero.image_path}</div>
+                            {resolveStorageUrl(draft.hero.image_path) ? (
+                              <img src={resolveStorageUrl(draft.hero.image_path)} alt="Vista hero" className="w-36 h-24 object-cover rounded border border-white/10" />
+                            ) : (
+                              <div className="w-36 h-24 rounded border border-dashed border-white/20 flex items-center justify-center text-gray-500">Sin vista</div>
+                            )}
+                          </div>
                         )}
                       </Field>
                     </div>
@@ -394,19 +454,11 @@ export default function AdminPanel() {
                       </Field>
                       <div className="text-sm text-gray-300 mb-2">Vista previa</div>
                       <div className="glass-effect rounded-xl p-4 border border-white/10">
-                        {(() => {
-                          const path = draft.about?.image_path;
-                          let url = null;
-                          if (path) {
-                            if (/^(https?:|data:|blob:)/i.test(path)) url = path;
-                            else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(path).data.publicUrl;
-                          }
-                          return url ? (
-                            <img src={url} alt="About preview" className="w-24 h-24 object-contain" />
-                          ) : (
-                            <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin imagen</div>
-                          );
-                        })()}
+                        {resolveStorageUrl(draft.about?.image_path) ? (
+                          <img src={resolveStorageUrl(draft.about?.image_path)} alt="Vista previa about" className="w-24 h-24 object-contain" />
+                        ) : (
+                          <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin imagen</div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -422,47 +474,214 @@ export default function AdminPanel() {
                 </div>
               )}
 
+                            
+              
               {tab === 'services' && (
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Servicios</h3>
+                  <div className="space-y-3">
+                    {servicesToRender().map(({ svc, idx }) => {
+                      const isOpen = openService === idx || (openService === null && idx === 0);
+                      const title = svc.title?.trim() || `Servicio ${idx + 1}`;
+                      const visible = svc.visible !== false;
+                      const iconPreview = resolveStorageUrl(svc.icon_path);
+                      return (
+                        <div key={idx} className="glass-effect rounded-xl border border-white/10 overflow-hidden">
+                          <div className="px-4 py-3 flex items-center gap-3 justify-between">
+                            <div className="text-left">
+                              <div className="font-semibold text-white">{title}</div>
+                              <div className="text-xs text-gray-400 flex items-center gap-2">
+                                <span>{visible ? 'Visible' : 'Oculto'}</span>
+                                {iconPreview ? (
+                                  <img src={iconPreview} alt="Icono" className="w-6 h-6 object-contain rounded border border-white/10" />
+                                ) : (
+                                  <span className="text-[10px] text-gray-500">Sin icono</span>
+                                )}
+                                {svc.description && <span className="truncate max-w-[220px] text-gray-400">{svc.description}</span>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <label className="flex items-center gap-2 text-xs text-gray-300">
+                                <input
+                                  type="checkbox"
+                                  checked={visible}
+                                  onChange={(e) => {
+                                    const val = e.target.checked;
+                                    setDraft((d) => {
+                                      const arr = [...d.services];
+                                      arr[idx] = { ...arr[idx], visible: val };
+                                      return { ...d, services: arr };
+                                    });
+                                  }}
+                                />
+                                <span>Mostrar</span>
+                              </label>
+                              <Button variant="ghost" size="sm" onClick={() => setOpenService(isOpen ? null : idx)}>
+                                {isOpen ? 'Cerrar' : 'Editar'}
+                              </Button>
+                            </div>
+                          </div>
+                          {isOpen && (
+                            <div className="p-4 space-y-4 border-t border-white/10">
+                              <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                  <Field label="Título del Servicio">
+                                    <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.title}
+                                      onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[idx]={...arr[idx], title:v}; return {...d, services:arr};}); }} />
+                                  </Field>
+                                  <Field label="Descripción">
+                                    <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.description}
+                                      onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[idx]={...arr[idx], description:v}; return {...d, services:arr};}); }} />
+                                  </Field>
+                                </div>
+                                <div>
+                                  <Field label="Ícono">
+                                    <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                      value={svc.icon}
+                                      onChange={(e)=>{
+                                        const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[idx]={...arr[idx], icon:v}; return {...d, services:arr};});
+                                      }}>
+                                      {['BarChart3','Database','LineChart','Workflow','Zap','Shield','Brain','Settings'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
+                                    </select>
+                                  </Field>
+                                  <Field label="Imagen de ícono (opcional, sube para reemplazar)">
+                                    <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setServiceFiles(prev=> ({...prev, [idx]: e.target.files?.[0]||null}))} />
+                                    {svc.icon_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {svc.icon_path}</div>}
+                                    {resolveStorageUrl(svc.icon_path) ? (
+                                      <img src={resolveStorageUrl(svc.icon_path)} alt="Vista icono" className="w-16 h-16 object-contain rounded border border-white/10 mt-2" />
+                                    ) : (
+                                      <div className="w-16 h-16 rounded border border-dashed border-white/20 flex items-center justify-center text-gray-500 mt-2">Sin vista</div>
+                                    )}
+                                  </Field>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, services: d.services.filter((_,sIdx)=>sIdx!==idx) }))}>Eliminar Servicio</Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, services:[...d.services,{ icon:'BarChart3', title:'', description:''}] }))}>Agregar Servicio</Button>
+                  </div>
+                </div>
+              )}
+
+              {tab === 'experience' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Experiencia</h3>
                   <div className="space-y-4">
-                    {draft.services.map((svc, i) => (
-                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                    {sortResumeEntries(draft.experience).map(({ entry: item, idx: i }) => (
+                      <div key={`${item.company || 'exp'}-${i}`} className="glass-effect rounded-xl p-4 border border-white/10">
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <Field label="Título del Servicio">
-                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.title}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], title:v}; return {...d, services:arr};}); }} />
+                            <Field label="Empresa">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.company || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], company:v}; return {...d, experience:arr};}); }} />
                             </Field>
-                            <Field label="Descripción">
-                              <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.description}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], description:v}; return {...d, services:arr};}); }} />
+                            <Field label="Cargo">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.role || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], role:v}; return {...d, experience:arr};}); }} />
+                            </Field>
+                            <Field label="Ubicación">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.location || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], location:v}; return {...d, experience:arr};}); }} />
                             </Field>
                           </div>
                           <div>
-                            <Field label="Ícono">
-                              <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
-                                value={svc.icon}
-                                onChange={(e)=>{
-                                  const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], icon:v}; return {...d, services:arr};});
-                                }}>
-                                {['BarChart3','Database','LineChart','Workflow','Zap','Shield','Brain','Settings'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
-                              </select>
-                            </Field>
-                            <Field label="Imagen de Ícono (opcional, sube para reemplazar)">
-                              <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setServiceFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
-                              {svc.icon_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {svc.icon_path}</div>}
+                            <div className="grid md:grid-cols-2 gap-3">
+                              <Field label="Año inicio">
+                                <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.start || ''}
+                                  onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], start:v}; return {...d, experience:arr};}); }} />
+                              </Field>
+                              <Field label="Año fin">
+                                <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.end || ''}
+                                  onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], end:v}; return {...d, experience:arr};}); }} />
+                              </Field>
+                            </div>
+                            <Field label="Descripción">
+                              <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.description || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], description:v}; return {...d, experience:arr};}); }} />
                             </Field>
                           </div>
                         </div>
-                        <div className="text-right mt-2">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, services: d.services.filter((_,idx)=>idx!==i) }))}>Eliminar Servicio</Button>
+                        <Field label="Logros (uno por línea)">
+                          <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(item.achievements || []).join('\n')}
+                            onChange={(e)=>{ const lines=e.target.value.split('\n').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], achievements:lines}; return {...d, experience:arr};}); }} />
+                        </Field>
+                        <Field label="Icono/Imagen (ruta opcional)">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.icon_path || ''}
+                            onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], icon_path:v || null}; return {...d, experience:arr};}); }} placeholder="assets/experience/logo.png" />
+                        </Field>
+                        <div className="text-right">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, experience:(d.experience||[]).filter((_,idx)=>idx!==i) }))}>Eliminar Experiencia</Button>
                         </div>
                       </div>
                     ))}
                   </div>
                   <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, services:[...d.services,{ icon:'BarChart3', title:'', description:''}] }))}>Agregar Servicio</Button>
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, experience:[...(d.experience||[]), { company:'', role:'', location:'', start:'', end:'', description:'', achievements:[], icon_path:null }] }))}>Agregar Experiencia</Button>
+                  </div>
+                </div>
+              )}
+
+              {tab === 'education' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Educación</h3>
+                  <div className="space-y-4">
+                    {sortResumeEntries(draft.education).map(({ entry: item, idx: i }) => (
+                      <div key={`${item.institution || 'edu'}-${i}`} className="glass-effect rounded-xl p-4 border border-white/10">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <Field label="Institución">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.institution || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], institution:v}; return {...d, education:arr};}); }} />
+                            </Field>
+                            <Field label="Programa">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.program || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], program:v}; return {...d, education:arr};}); }} />
+                            </Field>
+                            <Field label="Ubicación">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.location || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], location:v}; return {...d, education:arr};}); }} />
+                            </Field>
+                          </div>
+                          <div>
+                            <div className="grid md:grid-cols-2 gap-3">
+                              <Field label="Año inicio">
+                                <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.start || ''}
+                                  onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], start:v}; return {...d, education:arr};}); }} />
+                              </Field>
+                              <Field label="Año fin">
+                                <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.end || ''}
+                                  onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], end:v}; return {...d, education:arr};}); }} />
+                              </Field>
+                            </div>
+                            <Field label="Descripción">
+                              <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.description || ''}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], description:v}; return {...d, education:arr};}); }} />
+                            </Field>
+                          </div>
+                        </div>
+                        <Field label="Logros (uno por línea)">
+                          <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(item.achievements || []).join('\n')}
+                            onChange={(e)=>{ const lines=e.target.value.split('\n').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], achievements:lines}; return {...d, education:arr};}); }} />
+                        </Field>
+                        <Field label="Icono/Imagen (ruta opcional)">
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.icon_path || ''}
+                            onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], icon_path:v || null}; return {...d, education:arr};}); }} placeholder="assets/education/logo.png" />
+                        </Field>
+                        <div className="text-right">
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, education:(d.education||[]).filter((_,idx)=>idx!==i) }))}>Eliminar Educación</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, education:[...(d.education||[]), { institution:'', program:'', location:'', start:'', end:'', description:'', achievements:[], icon_path:null }] }))}>Agregar Educación</Button>
                   </div>
                 </div>
               )}
@@ -502,6 +721,11 @@ export default function AdminPanel() {
                             <Field label="Imagen de Portada (opcional)">
                               <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setProjectFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
                               {p.cover_image_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {p.cover_image_path}</div>}
+                              {resolveStorageUrl(p.cover_image_path) ? (
+                                <img src={resolveStorageUrl(p.cover_image_path)} alt="Portada actual" className="w-24 h-16 object-cover rounded border border-white/10 mt-2" />
+                              ) : (
+                                <div className="w-24 h-16 rounded border border-dashed border-white/20 flex items-center justify-center text-gray-500 mt-2">Sin vista</div>
+                              )}
                             </Field>
                           </div>
                         </div>
@@ -513,66 +737,6 @@ export default function AdminPanel() {
                   </div>
                   <div className="mt-3">
                     <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, projects:[...d.projects,{ title:'', description:'', tags:[], link:'', icon:'BarChart3', cover_image_path:null}] }))}>Agregar Proyecto</Button>
-                  </div>
-                </div>
-              )}
-
-              {tab === 'team' && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Equipo</h3>
-                  <div className="grid md:grid-cols-2 gap-6 mb-4">
-                    <Field label="Título de la Sección">
-                      <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.teamHeading || ''} onChange={(e)=>onChange('teamHeading', e.target.value)} />
-                    </Field>
-                    <Field label="Subtítulo">
-                      <textarea rows={2} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.teamSubheading || ''} onChange={(e)=>onChange('teamSubheading', e.target.value)} />
-                    </Field>
-                  </div>
-                  <div className="space-y-4">
-                    {(draft.teamMembers || []).map((member, i) => (
-                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <Field label="Nombre">
-                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.name || ''}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], name:v}; return {...d, teamMembers:arr};}); }} />
-                            </Field>
-                            <Field label="Posición">
-                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.position || ''}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], position:v}; return {...d, teamMembers:arr};}); }} />
-                            </Field>
-                            <Field label="Especialización">
-                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.specialization || ''}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], specialization:v}; return {...d, teamMembers:arr};}); }} />
-                            </Field>
-                            <Field label="Experiencia">
-                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.experience || ''}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], experience:v}; return {...d, teamMembers:arr};}); }} />
-                            </Field>
-                          </div>
-                          <div>
-                            <Field label="Descripción">
-                              <textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={member.description || ''}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], description:v}; return {...d, teamMembers:arr};}); }} />
-                            </Field>
-                            <Field label="Logros (separados por coma)">
-                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(member.achievements || []).join(', ')}
-                                onChange={(e)=>{ const arrAch=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...d.teamMembers]; arr[i]={...arr[i], achievements:arrAch}; return {...d, teamMembers:arr};}); }} />
-                            </Field>
-                            <Field label="Avatar (sube imagen)">
-                              <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setTeamFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
-                              {member.avatar_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {member.avatar_path}</div>}
-                            </Field>
-                          </div>
-                        </div>
-                        <div className="text-right mt-2">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, teamMembers: d.teamMembers.filter((_,idx)=>idx!==i) }))}>Eliminar Miembro</Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, teamMembers:[...(d.teamMembers||[]),{ name:'', position:'', specialization:'', experience:'', description:'', achievements:[] }] }))}>Agregar Miembro</Button>
                   </div>
                 </div>
               )}
@@ -760,7 +924,14 @@ export default function AdminPanel() {
                     <Field label="Hero Image (upload to replace)">
                       <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=>setHeroFile(e.target.files?.[0] || null)} />
                       {draft.hero?.image_path && (
-                        <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.hero.image_path}</div>
+                        <div className="space-y-2 text-[11px] text-gray-400 mt-1">
+                          <div>Actual: {draft.hero.image_path}</div>
+                          {resolveStorageUrl(draft.hero.image_path) ? (
+                            <img src={resolveStorageUrl(draft.hero.image_path)} alt="Vista hero" className="w-36 h-24 object-cover rounded border border-white/10" />
+                          ) : (
+                            <div className="w-36 h-24 rounded border border-dashed border-white/20 flex items-center justify-center text-gray-500">Sin vista</div>
+                          )}
+                        </div>
                       )}
                     </Field>
                   </div>
@@ -773,9 +944,16 @@ export default function AdminPanel() {
                     <Field label="Logo (sube una imagen para reemplazar)">
                       <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setLogoFile(e.target.files?.[0] || null)} />
                       {draft.branding?.logo_path && (
-                        <div className="text-[11px] text-gray-400 mt-1">Actual: {draft.branding.logo_path}</div>
+                        <div className="space-y-2 mt-1 text-[11px] text-gray-400">
+                          <div>Actual: {draft.branding.logo_path}</div>
+                          {resolveStorageUrl(draft.branding.logo_path) ? (
+                            <img src={resolveStorageUrl(draft.branding.logo_path)} alt="Logo actual" className="w-20 h-20 object-contain rounded border border-white/10" />
+                          ) : (
+                            <div className="w-20 h-20 rounded border border-dashed border-white/20 flex items-center justify-center text-gray-500">Sin vista</div>
+                          )}
+                        </div>
                       )}
-                      <div className="text-[11px] text-gray-500 mt-1">Si no estás autenticado como Admin, se mostrará una vista local temporal que no persiste tras recargar.</div>
+                      <div className="text-[11px] text-gray-500 mt-1">Si no estás autenticado como admin, se mostrará una vista local temporal que no persiste tras recargar.</div>
                     </Field>
                     <Field label="Logo URL (opcional)">
                       <input
@@ -793,19 +971,11 @@ export default function AdminPanel() {
                   <div>
                     <div className="text-sm text-gray-300 mb-2">Vista previa</div>
                     <div className="glass-effect rounded-xl p-4 border border-white/10">
-                      {(() => {
-                        const path = draft.branding?.logo_path;
-                        let url = null;
-                        if (path) {
-                          if (/^(https?:|data:|blob:)/i.test(path)) url = path;
-                          else if (supabase) url = supabase.storage.from('portfolio-assets').getPublicUrl(path).data.publicUrl;
-                        }
-                        return url ? (
-                          <img src={url} alt="Logo preview" className="w-24 h-24 object-contain" />
-                        ) : (
-                          <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin logo</div>
-                        );
-                      })()}
+                      {resolveStorageUrl(draft.branding?.logo_path) ? (
+                        <img src={resolveStorageUrl(draft.branding?.logo_path)} alt="Logo preview" className="w-24 h-24 object-contain" />
+                      ) : (
+                        <div className="w-24 h-24 bg-white/10 rounded flex items-center justify-center text-gray-400 text-xs">Sin logo</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -899,49 +1069,7 @@ export default function AdminPanel() {
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.services} onChange={(e)=>onChange('visibility.services', e.target.checked)} /> <span>Show Services</span></label>
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.projects} onChange={(e)=>onChange('visibility.projects', e.target.checked)} /> <span>Show Projects</span></label>
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.testimonials} onChange={(e)=>onChange('visibility.testimonials', e.target.checked)} /> <span>Show Testimonials</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.team} onChange={(e)=>onChange('visibility.team', e.target.checked)} /> <span>Show Team</span></label>
                   <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.resume} onChange={(e)=>onChange('visibility.resume', e.target.checked)} /> <span>Show Resume</span></label>
-                </div>
-              )}
-
-              {tab === 'services' && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Services</h3>
-                  <div className="space-y-4">
-                    {draft.services.map((svc, i) => (
-                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
-                        <div className="grid md:grid-cols-3 gap-3">
-                          <Field label="Icon">
-                            <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
-                              value={svc.icon}
-                              onChange={(e)=>{
-                                const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], icon:v}; return {...d, services:arr};});
-                              }}>
-                              {['BarChart3','Database','LineChart','Workflow'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-                          </Field>
-                          <Field label="Title">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.title}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], title:v}; return {...d, services:arr};}); }} />
-                          </Field>
-                          <Field label="Description">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.description}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[i]={...arr[i], description:v}; return {...d, services:arr};}); }} />
-                          </Field>
-                        </div>
-                        <Field label="Icon Image (upload to replace)">
-                          <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setServiceFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
-                          {svc.icon_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {svc.icon_path}</div>}
-                        </Field>
-                        <div className="text-right mt-2">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, services: d.services.filter((_,idx)=>idx!==i) }))}>Remove</Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, services:[...d.services,{ icon:'BarChart3', title:'', description:''}] }))}>Add Service</Button>
-                  </div>
                 </div>
               )}
 
@@ -971,6 +1099,11 @@ export default function AdminPanel() {
                           <Field label="Cover Image">
                             <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setProjectFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
                             {p.cover_image_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {p.cover_image_path}</div>}
+                              {resolveStorageUrl(p.cover_image_path) ? (
+                                <img src={resolveStorageUrl(p.cover_image_path)} alt="Portada actual" className="w-24 h-16 object-cover rounded border border-white/10 mt-2" />
+                              ) : (
+                                <div className="w-24 h-16 rounded border border-dashed border-white/20 flex items-center justify-center text-gray-500 mt-2">Sin vista</div>
+                              )}
                           </Field>
                         </div>
                         <div className="text-right mt-2">
@@ -1027,16 +1160,18 @@ export default function AdminPanel() {
                 </div>
               )}
 
-              <div className="flex gap-3 mt-6">
-                <Button onClick={handleSaveScoped} className="bg-blue-600 text-white">Save</Button>
-                <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
-                <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
-              </div>
+              {session && (
+                <div className="flex gap-3 mt-6">
+                  <Button onClick={handleSaveScoped} className="bg-blue-600 text-white">Save</Button>
+                  <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
+                  <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <p className="text-xs text-gray-400 mt-4">Tip: Open admin anytime by adding #admin to the URL. {supa.loading ? 'Syncing with Supabase…' : ''} {supa.error ? `(Supabase error: ${supa.error})` : ''}</p>
+        <p className="text-xs text-gray-400 mt-4">Tip: Open admin anytime by adding #admin to the URL. {supa.loading ? 'Syncing with Supabase...' : ''} {supa.error ? `(Supabase error: ${supa.error})` : ''}</p>
       </div>
     </div>
   );

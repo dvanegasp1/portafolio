@@ -121,7 +121,7 @@ const Services = () => {
               if (supabase && !/^https?:/i.test(url)) {
                 url = supabase.storage.from('portfolio-assets').getPublicUrl(service.icon_path).data.publicUrl;
               }
-              iconElement = <img src={url} alt="Service icon" className="w-12 h-12 object-contain" />;
+              iconElement = <img src={url} alt="Icono del servicio" className="w-12 h-12 object-contain" />;
             } else {
               const Icon = iconMap[staticService?.icon || service.icon] || BarChart3;
               iconElement = <Icon className="w-12 h-12 text-white" />;

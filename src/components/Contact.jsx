@@ -20,9 +20,9 @@ export default function Contact() {
   const defaultDescription = content.contact?.note || '';
 
   const infoBlocks = [
-    content.contact?.email ? { icon: Mail, title: 'Email', details: content.contact.email, description: defaultDescription, link: `mailto:${content.contact.email}` } : null,
-    content.contact?.phone ? { icon: Phone, title: 'Telefono', details: content.contact.phone, description: content.contact?.hours || defaultDescription } : null,
-    content.contact?.location ? { icon: MapPin, title: 'Ubicacion', details: content.contact.location, description: defaultDescription } : null,
+    content.contact?.email ? { icon: Mail, title: 'Correo', details: content.contact.email, description: defaultDescription, link: `mailto:${content.contact.email}` } : null,
+    content.contact?.phone ? { icon: Phone, title: 'Teléfono', details: content.contact.phone, description: content.contact?.hours || defaultDescription } : null,
+    content.contact?.location ? { icon: MapPin, title: 'Ubicaci?n', details: content.contact.location, description: defaultDescription } : null,
     content.contact?.hours && !content.contact?.phone ? { icon: Clock, title: 'Horario', details: content.contact.hours, description: defaultDescription } : null,
     { icon: Linkedin, title: 'LinkedIn', details: 'Conecta conmigo', description: 'Perfil profesional', link: 'https://linkedin.com/in/tu-perfil' },
   ].filter(Boolean);
@@ -38,7 +38,7 @@ export default function Contact() {
 
     // Real-time validation
     if (name === 'email' && value && !validateEmail(value)) {
-      setErrors((p) => ({ ...p, email: 'Email inválido' }));
+      setErrors((p) => ({ ...p, email: 'Correo inválido' }));
     } else if (name === 'email') {
       setErrors((p) => ({ ...p, email: '' }));
     }
@@ -49,8 +49,8 @@ export default function Contact() {
     const newErrors = {};
 
     if (!formData.name.trim()) newErrors.name = 'Nombre es requerido';
-    if (!formData.email.trim()) newErrors.email = 'Email es requerido';
-    else if (!validateEmail(formData.email)) newErrors.email = 'Email inválido';
+    if (!formData.email.trim()) newErrors.email = 'Correo es requerido';
+    else if (!validateEmail(formData.email)) newErrors.email = 'Correo inválido';
     if (!formData.message.trim()) newErrors.message = 'Mensaje es requerido';
 
     setErrors(newErrors);
@@ -91,7 +91,7 @@ export default function Contact() {
                 {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
               </div>
               <div>
-                <label className="text-sm text-gray-300">Email *</label>
+                <label className="text-sm text-gray-300">Correo *</label>
                 <input className="w-full bg-transparent border border-white/20 rounded-lg px-3 py-2" name="email" value={formData.email} onChange={handleInputChange} placeholder="tu@email.com" />
                 {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
               </div>
@@ -100,7 +100,7 @@ export default function Contact() {
                 <input className="w-full bg-transparent border border-white/20 rounded-lg px-3 py-2" name="company" value={formData.company} onChange={handleInputChange} placeholder="Nombre de tu empresa" />
               </div>
               <div>
-                <label className="text-sm text-gray-300">Telefono</label>
+                <label className="text-sm text-gray-300">Teléfono</label>
                 <input className="w-full bg-transparent border border-white/20 rounded-lg px-3 py-2" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="+57 300 123 4567" />
               </div>
               <div className="md:col-span-2">

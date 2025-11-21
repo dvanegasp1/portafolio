@@ -38,7 +38,7 @@ export default function Projects() {
     }
   ];
   const heading = content?.projectsHeading || "Proyectos Destacados" || '';
-  const subheading = content?.projectsSubheading || "Soluciones en analítica de datos, automatización y gestión estratégica." || '';
+  const subheading = content?.projectsSubheading || "Soluciones en analítica de datos, automatización y gestión estratégica." || "";
   const badgeText = content?.hero?.badge || "Proyectos" || '';
 
   if (!loading && projects.length === 0) {

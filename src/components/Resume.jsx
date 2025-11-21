@@ -34,13 +34,13 @@ const TimelineItem = ({ left, item, index }) => {
               {iconUrl ? (
                 <img src={iconUrl} alt={title} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">No Icon</div>
+                <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">Sin icono</div>
               )}
             </div>
             <div>
               <div className="text-white font-semibold text-lg">{title}</div>
               <div className="text-purple-200/80">{subtitle}</div>
-              <div className="text-xs text-gray-300 mt-1">{location ? `${location} · ` : ''}{start} {end ? `– ${end}` : ''}</div>
+              <div className="text-xs text-gray-300 mt-1">{location ? `${location} - ` : ''}{start}{end ? ` - ${end}` : ''}</div>
             </div>
           </div>
           {description && (<p className="text-gray-300 mt-3">{description}</p>)}
@@ -55,12 +55,31 @@ const TimelineItem = ({ left, item, index }) => {
   );
 };
 
+const parseDateValue = (value) => {
+  if (!value) return -Infinity;
+  const str = String(value).trim();
+  if (/actual|curso/i.test(str)) return Number.MAX_SAFE_INTEGER;
+  const digits = str.replace(/[^0-9]/g, '');
+  if (!digits) return -Infinity;
+  return Number(digits.padEnd(8, '0'));
+};
+
+const sortEntries = (list) =>
+  (Array.isArray(list) ? list : [])
+    .map((entry, idx) => ({
+      entry,
+      idx,
+      key: parseDateValue(entry?.end) !== -Infinity ? parseDateValue(entry?.end) : parseDateValue(entry?.start),
+    }))
+    .sort((a, b) => b.key - a.key)
+    .map((item) => item.entry);
+
 export default function Resume() {
   const { content, supa } = useContent();
   const loading = supa.loading;
   const show = content?.visibility?.resume !== false;
-  const education = Array.isArray(content?.education) ? content.education : [];
-  const experience = Array.isArray(content?.experience) ? content.experience : [];
+  const education = sortEntries(content?.education);
+  const experience = sortEntries(content?.experience);
   const summary = typeof content?.resumeSummary === 'string' ? content.resumeSummary.trim() : '';
 
   if (!show) return null;
@@ -73,9 +92,9 @@ export default function Resume() {
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
           <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
-            <span className="text-sm font-medium text-purple-300">What I have done</span>
+            <span className="text-sm font-medium text-purple-300">Trayectoria</span>
           </div>
-          <h2 className="text-4xl lg:text-6xl font-bold mb-2">Resume.</h2>
+          <h2 className="text-4xl lg:text-6xl font-bold mb-2">Experiencia y estudio.</h2>
         </div>
 
         {/* Summary */}
@@ -88,11 +107,11 @@ export default function Resume() {
         {/* Education */}
         {education.length > 0 && (
           <div className="mb-10">
-            <div className="text-purple-200 uppercase tracking-wide text-sm mb-2">My Background</div>
-            <h3 className="text-3xl font-semibold mb-6">Education.</h3>
+            <div className="text-purple-200 uppercase tracking-wide text-sm mb-2">Formación</div>
+            <h3 className="text-3xl font-semibold mb-6">Educación.</h3>
             <div className="space-y-6">
               {education.map((item, i) => (
-                <TimelineItem key={`edu-${i}`} left={i % 2 === 0} item={item} index={i} />
+                <TimelineItem key={`edu-${item?.institution || i}`} left={i % 2 === 0} item={item} index={i} />
               ))}
             </div>
           </div>
@@ -102,10 +121,10 @@ export default function Resume() {
         {experience.length > 0 && (
           <div>
             <div className="text-purple-200 uppercase tracking-wide text-sm mb-2">Roles</div>
-            <h3 className="text-3xl font-semibold mb-6">Experience.</h3>
+            <h3 className="text-3xl font-semibold mb-6">Experiencia.</h3>
             <div className="space-y-6">
               {experience.map((item, i) => (
-                <TimelineItem key={`exp-${i}`} left={i % 2 !== 0} item={item} index={i} />
+                <TimelineItem key={`exp-${item?.company || i}`} left={i % 2 !== 0} item={item} index={i} />
               ))}
             </div>
           </div>

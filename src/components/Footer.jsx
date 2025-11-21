@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Linkedin, Twitter, Instagram, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient.js';
 import { useContent } from '@/content/ContentContext.jsx';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [newsletterError, setNewsletterError] = useState('');
 
   const footerLinks = {
     company: [
@@ -49,26 +46,6 @@ const Footer = () => {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
-  const handleNewsletterSubmit = (e) => {
-    e.preventDefault();
-    if (!newsletterEmail.trim()) {
-      setNewsletterError('Email es requerido');
-      return;
-    }
-    if (!validateEmail(newsletterEmail)) {
-      setNewsletterError('Email inválido');
-      return;
-    }
-    setNewsletterError('');
-    toast({ title: '¡Suscripción exitosa!', description: 'Gracias por suscribirte. Recibirás nuestras novedades pronto.' });
-    setNewsletterEmail('');
-  };
-
   const { content } = useContent();
   const logoUrl = (() => {
     const lp = content?.branding?.logo_path;
@@ -106,7 +83,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center text-gray-300">
                 <MapPin className="w-5 h-5 mr-3 text-blue-400" />
-                <span>{content.contact?.location || 'Remote / Worldwide'}</span>
+                <span>{content.contact?.location || 'Remoto / Global'}</span>
               </div>
             </div>
             <div className="flex space-x-4 mt-6">
@@ -147,26 +124,7 @@ const Footer = () => {
           </motion.div>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="glass-effect rounded-2xl p-8 mb-12 border border-white/10">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-white mb-4">Mantente <span className="gradient-text">Actualizado</span></h3>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">Recibe ideas y recursos exclusivos sobre analítica directamente en tu correo.</p>
-            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-               <div className="flex-1">
-                 <input
-                   type="email"
-                   value={newsletterEmail}
-                   onChange={(e) => setNewsletterEmail(e.target.value)}
-                   placeholder="tu@email.com"
-                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-white/15 transition-all duration-300"
-                 />
-                 {newsletterError && <p className="text-red-400 text-xs mt-1">{newsletterError}</p>}
-               </div>
-               <Button type="submit" className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300">Quiero recibir novedades</Button>
-             </form>
-          </div>
-        </motion.div>
-        )}
+        <div className="mb-12" />
 
         <div className="border-t border-white/10 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">

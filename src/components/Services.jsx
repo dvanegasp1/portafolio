@@ -116,7 +116,7 @@ const Services = () => {
                 >
                   <div className={iconWrapperClasses}>
                     {thumbnail ? (
-                      <img src={thumbnail} alt={service.title || 'Service icon'} className="w-full h-full object-cover" />
+                      <img src={thumbnail} alt={service.title || 'Icono del servicio'} className="w-full h-full object-cover" />
                     ) : (
                       <Icon className="w-10 h-10 text-white" />
                     )}

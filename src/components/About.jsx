@@ -25,6 +25,18 @@ export default function About() {
   const primaryHighlight = highlights[0] || content?.role || '';
   const secondaryHighlight = highlights[1] || '';
 
+  const goTo = (hash) => {
+    if (!hash) return;
+    if (hash.startsWith('#')) {
+      const el = document.querySelector(hash);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+    window.location.hash = hash;
+  };
+
   const renderHighlight = (value, index) => (
     <motion.div
       key={value || index}
@@ -52,7 +64,7 @@ export default function About() {
           >
             <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
               <Award className="w-4 h-4 mr-2 text-purple-400" />
-              <span className="text-sm font-medium text-purple-300">About</span>
+              <span className="text-sm font-medium text-purple-300">Sobre mí</span>
             </div>
 
             <h2 className="text-4xl lg:text-6xl font-bold mb-6">
@@ -113,10 +125,10 @@ export default function About() {
 </div>
 
 <div className="flex flex-col sm:flex-row gap-4">
-  <button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-full font-semibold transition-colors">
+  <button onClick={() => goTo('#projects')} className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-full font-semibold transition-colors">
     Conoce más sobre mi experiencia
   </button>
-  <button className="border-2 border-blue-500 text-blue-300 hover:bg-blue-500/10 px-6 py-3 rounded-full font-semibold transition-colors">
+  <button onClick={() => goTo('#contact')} className="border-2 border-blue-500 text-blue-300 hover:bg-blue-500/10 px-6 py-3 rounded-full font-semibold transition-colors">
     Trabajemos juntos
   </button>
 </div>
@@ -137,7 +149,7 @@ export default function About() {
                 {imageUrl ? (
                   <img
                     className="w-3/4 h-3/4 object-cover rounded-[20px] transition duration-700 ease-out group-hover:scale-105 group-hover:rotate-[0.5deg]"
-                    alt={about.heading || 'About section visual'}
+                    alt={about.heading || 'Imagen de la sección Sobre mí'}
                     src={imageUrl}
                   />
                 ) : (
@@ -163,7 +175,7 @@ export default function About() {
               ) : (
                 <div className="hidden lg:block absolute -bottom-6 -right-6">
                   <div className="glass-effect rounded-xl px-3 py-2.5 border border-white/10 shadow-lg backdrop-blur-xl">
-                    <p className="text-[20px] tracking-[0.35em] uppercase text-blue-200/80">Insights</p>
+                    <p className="text-[20px] tracking-[0.35em] uppercase text-blue-200/80">Hallazgos</p>
                     <p className="text-[16px] font-semibold text-white mt-1.5 leading-tight">{primaryHighlight}</p>
                     {secondaryHighlight && <p className="text-[14px] text-gray-300 mt-1">{secondaryHighlight}</p>}
                   </div>

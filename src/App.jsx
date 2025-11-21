@@ -95,7 +95,8 @@ function AppInner() {
             {content.visibility.testimonials && <Testimonials />}
             <Contact />
           </>
-        )}        {route.startsWith('services/') && <ServiceDetail slug={route.slice('services/'.length)} />}
+        )}
+        {route.startsWith('services/') && <ServiceDetail slug={route.slice('services/'.length)} />}
         {route === 'projects' && <Projects />}
         {route === 'about' && <About />}
         {route === 'blog' && (<Blog />)}
@@ -109,7 +110,7 @@ function AppInner() {
           <SimplePage title="Recursos Gratuitos" subtitle="Plantillas, snippets y guías rápidas de analítica.">
             <ul>
               <li>Checklist de calidad de datos</li>
-              <li>Guía de KPIs para e‑commerce</li>
+              <li>Guía de KPIs para e-commerce</li>
               <li>Snippet SQL de cohorts</li>
             </ul>
           </SimplePage>
@@ -131,7 +132,7 @@ function AppInner() {
         )}
         {route === 'help' && (
           <SimplePage title="Centro de Ayuda">
-            <p>¿Dudas sobre el portfolio o servicios? Envíame un mensaje desde Contacto y te respondo en 24h.</p>
+            <p>¿Dudas sobre el portafolio o servicios? Envíame un mensaje desde Contacto y te respondo en 24h.</p>
           </SimplePage>
         )}
 

@@ -24,15 +24,15 @@ export default function Header() {
   }, []);
 
   const navItems = [
-    { name: 'Home', href: '#home', show: true },
-    { name: 'Services', href: '#services', show: content.visibility.services },
-    { name: 'Projects', href: '#projects', show: content.visibility.projects },
+    { name: 'Inicio', href: '#home', show: true },
+    { name: 'Servicios', href: '#services', show: content.visibility.services },
+    { name: 'Proyectos', href: '#projects', show: content.visibility.projects },
     { name: 'Blog', href: '#/blog', show: true },
-    { name: 'Sobre Mi', href: '#about', show: true },
-    { name: 'Team', href: '#team', show: content.visibility.team },
-    { name: 'Testimonials', href: '#testimonials', show: content.visibility.testimonials },
-    { name: 'Contact', href: '#contact', show: true },
-  ].filter(i => i.show);
+    { name: 'Sobre mí', href: '#about', show: true },
+    { name: 'Equipo', href: '#team', show: content.visibility.team },
+    { name: 'Testimonios', href: '#testimonials', show: content.visibility.testimonials },
+    { name: 'Contacto', href: '#contact', show: true },
+  ].filter((i) => i.show);
 
   const handleNavClick = (href) => {
     if (!href) return;
@@ -66,7 +66,12 @@ export default function Header() {
     >
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-2">
+          <motion.button
+            type="button"
+            onClick={() => handleNavClick('#home')}
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center space-x-2 focus:outline-none"
+          >
             {logoUrl ? (
               <img src={logoUrl} alt={content.siteName + ' logo'} className="w-10 h-10 object-contain rounded" />
             ) : (
@@ -75,7 +80,7 @@ export default function Header() {
               </div>
             )}
             <span className="text-2xl font-bold gradient-text">{content.siteName}</span>
-          </motion.div>
+          </motion.button>
 
           <div className="hidden lg:flex items-center space-x-8">
             {navItems.map((item, index) => (
@@ -99,7 +104,7 @@ export default function Header() {
               onClick={() => handleNavClick('#contact')}
               className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-900 hover:to-black text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 pulse-glow"
             >
-              Contact
+              Contacto
             </Button>
           </div>
 
@@ -128,7 +133,7 @@ export default function Header() {
               onClick={() => handleNavClick('#contact')}
               className="w-full mt-4 bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-900 hover:to-black text-white py-2 rounded-full font-semibold"
             >
-              Contact
+              Contacto
             </Button>
           </motion.div>
         )}
