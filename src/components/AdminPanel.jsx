@@ -33,6 +33,7 @@ export default function AdminPanel() {
   const [aboutFile, setAboutFile] = useState(null);
   const [serviceFiles, setServiceFiles] = useState({});
   const [testimonialFiles, setTestimonialFiles] = useState({});
+  const [educationFiles, setEducationFiles] = useState([]);
   const [openService, setOpenService] = useState(null);
   const [showServiceNav, setShowServiceNav] = useState(false);
 
@@ -257,6 +258,24 @@ export default function AdminPanel() {
           }
         }
         setServiceFiles({});
+      }
+      if (educationFiles.length > 0 && supabase && session && isAdmin) {
+        for (let idx = 0; idx < educationFiles.length; idx++) {
+          const file = educationFiles[idx];
+          if (file) {
+            const key = `education/logos/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
+            if (upErr) {
+              errors.push(upErr.message || 'No se pudo subir logo de educación');
+              toast({ title: 'Error subiendo logo', description: upErr.message, variant: 'destructive' });
+            } else {
+              const educationSafe = Array.isArray(next.education) ? next.education : [];
+              next = { ...next, education: educationSafe.map((e, i) => i == idx ? { ...e, icon_path: key } : e) };
+              setDraft(next);
+            }
+          }
+        }
+        setEducationFiles([]);
       }
       if (testimonialFiles && Object.keys(testimonialFiles).length > 0 && supabase && session && isAdmin) {
         for (const [idx, file] of Object.entries(testimonialFiles)) {
@@ -673,6 +692,15 @@ export default function AdminPanel() {
                         <Field label="Icono/Imagen (ruta opcional)">
                           <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.icon_path || ''}
                             onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], icon_path:v || null}; return {...d, education:arr};}); }} placeholder="assets/education/logo.png" />
+                        </Field>
+                        <Field label="Imagen del logo (sube para reemplazar)">
+                          <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setEducationFiles(prev => { const newArr = [...prev]; newArr[i] = e.target.files?.[0] || null; return newArr; })} />
+                          {item.icon_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {item.icon_path}</div>}
+                          {resolveStorageUrl(item.icon_path) ? (
+                            <img src={resolveStorageUrl(item.icon_path)} alt="Logo actual" className="w-16 h-16 object-contain rounded border border-white/10 mt-2" />
+                          ) : (
+                            <div className="w-16 h-16 rounded border border-dashed border-white/20 flex items-center justify-center text-gray-500 mt-2">Sin vista</div>
+                          )}
                         </Field>
                         <div className="text-right">
                           <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, education:(d.education||[]).filter((_,idx)=>idx!==i) }))}>Eliminar Educación</Button>

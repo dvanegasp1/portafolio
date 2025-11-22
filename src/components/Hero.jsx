@@ -29,7 +29,7 @@ export default function Hero() {
   const primaryCta = hero.primaryCta;
   const secondaryCta = hero.secondaryCta;
   const heroImage = resolveStorageUrl(hero.image_path);
-  const whyCards = Array.isArray(content?.whyUs) ? content.whyUs : [];
+  const educationCards = Array.isArray(content?.education) ? content.education : [];
 
   const scrollTo = (selector) => {
     if (!selector || typeof window === 'undefined') return;
@@ -95,22 +95,36 @@ export default function Hero() {
       );
     }
     if (!item) return null;
-    const Icon = iconMap[item.icon] || fallbackIcon;
-    return (
-      <div className={`absolute ${positionClass || 'top-6 left-6'} w-[100rem] md:w-[100rem]`}>
-        <div className="glass-effect rounded-2xl p-6 border border-white/10 shadow-xl">
-          <div className="flex items-center">
-            <div className="w-16 h-16 md:w-40 md:h-40 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mr-4">
-              <Icon className="w-100 h-10 md:w-12 md:h-12 text-white" />
-            </div>
-            <div>
-              <div className="text-white font-semibold leading-tight text-lg md:text-2xl">{item.title}</div>
-              <div className="text-gray-300 text-md md:text-lg">{item.subtitle}</div>
+    if (item.icon_path) {
+      // Display image for education icons
+      const url = resolveStorageUrl(item.icon_path);
+      if (url) {
+        return (
+          <div className={`absolute ${positionClass || 'top-6 left-6'} w-24 h-24 md:w-32 md:h-32`}>
+            <img src={url} alt={item.institution || item.title} className="w-full h-full rounded-lg object-contain shadow-xl" />
+          </div>
+        );
+      }
+      return null;
+    } else {
+      // Use Lucide icon for whyUs
+      const Icon = iconMap[item.icon] || fallbackIcon;
+      return (
+        <div className={`absolute ${positionClass || 'top-6 left-6'} w-[100rem] md:w-[100rem]`}>
+          <div className="glass-effect rounded-2xl p-6 border border-white/10 shadow-xl">
+            <div className="flex items-center">
+              <div className="w-16 h-16 md:w-40 md:h-40 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mr-4">
+                <Icon className="w-100 h-10 md:w-12 md:h-12 text-white" />
+              </div>
+              <div>
+                <div className="text-white font-semibold leading-tight text-lg md:text-2xl">{item.title}</div>
+                <div className="text-gray-300 text-md md:text-lg">{item.subtitle}</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    );
+      );
+    }
   };
 
   return (
@@ -144,7 +158,7 @@ export default function Hero() {
               ) : (
                 <div className="gradient-text drop-shadow-lg">
                   {title.split('. ').map((part, index) => (
-                    <span key={index} className={`block ${index === 0 ? 'text-5xl lg:text-7xl' : 'text-4xl lg:text-6xl'}`}>
+                    <span key={index} className={`block tracking-wide ${index === 0 ? 'text-4xl lg:text-6xl' : 'text-3xl lg:text-5xl'}`}>
                       {part}{index === 0 ? '.' : ''}
                     </span>
                   ))}
@@ -188,8 +202,8 @@ export default function Hero() {
             ) : (
               <div className="w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-blue-900/60 to-cyan-900/40 border border-blue-500/20 shadow-2xl" />
             )}
-            {renderWhyCard(whyCards[0], Users, '-top-6 -left-6')}
-            {renderWhyCard(whyCards[1], Target, '-bottom-6 -right-6')}
+            {renderWhyCard(experienceCards[0], Users, '-top-6 -left-6')}
+            {renderWhyCard(experienceCards[1], Target, '-bottom-6 -right-6')}
           </motion.div>
         </div>
       </div>

@@ -418,11 +418,16 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
         return;
       } // not configurado
       setSupaState((s) => ({ ...s, loading: true, error: null }));
+      const timeout = setTimeout(() => {
+        if (!cancelled) setSupaState((s) => ({ ...s, loading: false, error: 'Timeout loading content' }));
+      }, 10000);
       try {
         const merged = await fetchNormalized();
+        clearTimeout(timeout);
         if (!cancelled && merged) setContent(merged);
         if (!cancelled) setSupaState((s) => ({ ...s, loading: false, error: null }));
       } catch (e) {
+        clearTimeout(timeout);
         if (!cancelled) setSupaState((s) => ({ ...s, loading: false, error: e.message || String(e) }));
       }
     };
