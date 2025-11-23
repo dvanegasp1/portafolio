@@ -139,11 +139,12 @@ export default function AdminPanel() {
     }
     setIsSaving(true);
     try {
-      const { errors } = await handleSave();
+      const { errors, snapshot } = await handleSave();
       if (errors && errors.length) {
         toast({ title: 'Error', description: errors.join(' | '), variant: 'destructive' });
         return;
       }
+      const payload = snapshot || draft;
       if (supabase && session && isAdmin) {
         const scopesByTab = {
           general: ['site','seo','contact'],
@@ -158,7 +159,7 @@ export default function AdminPanel() {
           blog: ['blog'],
         };
         const scopes = scopesByTab[tab] || ['all'];
-        const { error } = await saveToSupabase(draft, scopes);
+        const { error } = await saveToSupabase(payload, scopes);
         if (error) {
           toast({ title: 'Sync parcial fall?', description: error.message || String(error), variant: 'destructive' });
         } else {
@@ -310,7 +311,7 @@ export default function AdminPanel() {
       console.error('Error al guardar cambios:', e);
       errors.push(e?.message || 'Error desconocido al guardar');
     }
-    return { errors };
+    return { errors, snapshot: next };
   };
 
 
