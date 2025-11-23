@@ -97,32 +97,6 @@ export default function About() {
   </div>
 </div>
 
-<div className="mb-8">
-  <h3 className="text-2xl font-bold mb-4 text-white">Trayectoria Profesional</h3>
-  <div className="space-y-4">
-    <div className="flex items-start">
-      <div className="w-4 h-4 bg-blue-400 rounded-full mt-1 mr-4 flex-shrink-0"></div>
-      <div>
-        <p className="text-gray-300 font-semibold">2003 - Presente</p>
-        <p className="text-gray-400">Especialista en Analítica de Datos y Automatización</p>
-      </div>
-    </div>
-    <div className="flex items-start">
-      <div className="w-4 h-4 bg-blue-400 rounded-full mt-1 mr-4 flex-shrink-0"></div>
-      <div>
-        <p className="text-gray-300 font-semibold">Maestría en Analítica de Datos</p>
-        <p className="text-gray-400">Formación avanzada en técnicas de data science</p>
-      </div>
-    </div>
-    <div className="flex items-start">
-      <div className="w-4 h-4 bg-blue-400 rounded-full mt-1 mr-4 flex-shrink-0"></div>
-      <div>
-        <p className="text-gray-300 font-semibold">Experiencia en múltiples industrias</p>
-        <p className="text-gray-400">Aplicación de analítica ética en sectores diversos</p>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div className="flex flex-col sm:flex-row gap-4">
   <button onClick={() => goTo('#projects')} className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-full font-semibold transition-colors">

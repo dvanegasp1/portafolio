@@ -112,14 +112,16 @@ const Services = () => {
                 <button
                   type="button"
                   onClick={goToServiceDetail}
-                  className="glass-effect rounded-2xl p-8 h-full w-full text-left hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 cursor-pointer"
+                  className="glass-effect rounded-2xl p-8 h-full w-full text-center hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 cursor-pointer"
                 >
-                  <div className={iconWrapperClasses}>
-                    {thumbnail ? (
-                      <img src={thumbnail} alt={service.title || 'Icono del servicio'} className="w-full h-full object-cover" />
-                    ) : (
-                      <Icon className="w-10 h-10 text-white" />
-                    )}
+                  <div className="text-center">
+                    <div className={iconWrapperClasses}>
+                      {thumbnail ? (
+                        <img src={thumbnail} alt={service.title || 'Icono del servicio'} className="w-full h-full object-cover" />
+                      ) : (
+                        <Icon className="w-10 h-10 text-white" />
+                      )}
+                    </div>
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-white">{service.title}</h3>
                   <p className="text-gray-300 mb-6 leading-relaxed">{service.description}</p>
