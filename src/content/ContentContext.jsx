@@ -21,6 +21,37 @@ function cloneSeedList(seed) {
   return (seed || []).map((x) => ({ ...x }));
 }
 
+function dedupeProjects(list) {
+  if (!Array.isArray(list)) return [];
+  const seen = new Set();
+  return list.filter((proj) => {
+    if (!proj || typeof proj !== 'object') return false;
+    const title = (proj.title || '').trim();
+    const description = (proj.description || '').trim();
+    const link = (proj.link || '').trim();
+    const cover = (proj.cover_image_path || '').trim();
+    if (!title && !description && !link && !cover) return false;
+    const key = [title.toLowerCase(), description.toLowerCase(), link.toLowerCase(), cover.toLowerCase()].join('|');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function dedupeTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  const seen = new Set();
+  return tags
+    .map((tag) => (typeof tag === 'string' ? tag.trim() : String(tag || '').trim()))
+    .filter((tag) => {
+      if (!tag) return false;
+      const key = tag.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 const servicesSeed = [
   {
     icon: 'BarChart3',
@@ -326,7 +357,16 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
             return acc;
           }, {});
         }
-        result.projects = projects.map((p) => ({ title: p.title, description: p.description, tags: tagsById[p.id] || [], link: p.link }));
+        const normalizedProjects = projects.map((p) => ({
+          title: p.title || '',
+          description: p.description || '',
+          tags: dedupeTags(tagsById[p.id] || []),
+          link: p.link || null,
+          cover_image_path: p.cover_image_path || null,
+        }));
+        result.projects = dedupeProjects(normalizedProjects);
+      } else {
+        result.projects = [];
       }
     }
     // contact
@@ -549,17 +589,39 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
     }
     // Projects + tags
     if (should('projects')) {
-      const s7del = await supabase.from('projects').delete().eq('site_id', 1);
-      if (s7del.error) errors.push(s7del.error);
-      if (Array.isArray(c.projects) && c.projects.length) {
-        const rows = c.projects.map((p, idx) => ({ site_id: 1, title: p.title, description: p.description, link: p.link || null, cover_image_path: p.cover_image_path || null, sort_order: (idx + 1) * 10 }));
+      let existingIds = [];
+      const { data: existingProjects, error: existingFetchErr } = await supabase.from('projects').select('id').eq('site_id', 1);
+      if (existingFetchErr) {
+        errors.push(existingFetchErr);
+      } else {
+        existingIds = (existingProjects ?? []).map((row) => row.id).filter(Boolean);
+        if (existingIds.length) {
+          const { error: tagsDelErr } = await supabase.from('project_tags').delete().in('project_id', existingIds);
+          if (tagsDelErr) errors.push(tagsDelErr);
+        }
+      }
+      const deleteResult = await supabase.from('projects').delete().eq('site_id', 1);
+      if (deleteResult.error) {
+        errors.push(deleteResult.error);
+      }
+      const uniqueProjects = dedupeProjects(Array.isArray(c.projects) ? c.projects : []);
+      if (!deleteResult.error && uniqueProjects.length) {
+        const rows = uniqueProjects.map((p, idx) => ({
+          site_id: 1,
+          title: p.title || '',
+          description: p.description || '',
+          link: p.link || null,
+          cover_image_path: p.cover_image_path || null,
+          sort_order: (idx + 1) * 10,
+        }));
         const ins = await supabase.from('projects').insert(rows).select('id');
-        if (ins.error) errors.push(ins.error);
-        else if (ins.data && ins.data.length) {
+        if (ins.error) {
+          errors.push(ins.error);
+        } else if (ins.data && ins.data.length) {
           const tags = [];
           ins.data.forEach((r, i) => {
-            const ts = Array.isArray(c.projects[i]?.tags) ? c.projects[i].tags : [];
-            ts.forEach((t) => tags.push({ project_id: r.id, tag: t }));
+            const normalizedTags = dedupeTags(uniqueProjects[i]?.tags);
+            normalizedTags.forEach((t) => tags.push({ project_id: r.id, tag: t }));
           });
           if (tags.length) {
             const tIns = await supabase.from('project_tags').insert(tags);

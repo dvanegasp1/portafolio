@@ -36,6 +36,7 @@ export default function AdminPanel() {
   const [educationFiles, setEducationFiles] = useState([]);
   const [openService, setOpenService] = useState(null);
   const [showServiceNav, setShowServiceNav] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const servicesToRender = () => {
     if (openService === null) {
@@ -131,12 +132,17 @@ export default function AdminPanel() {
 
   // Save current tab only: run uploads via handleSave, then scoped DB write
   const handleSaveScoped = async () => {
-    const { errors } = await handleSave();
-    if (errors && errors.length) {
-      toast({ title: 'Error', description: errors.join(' | '), variant: 'destructive' });
+    if (isSaving) {
+      toast({ title: 'Guardado en progreso', description: 'Por favor espera a que termine antes de guardar nuevamente.', variant: 'default' });
       return;
     }
+    setIsSaving(true);
     try {
+      const { errors } = await handleSave();
+      if (errors && errors.length) {
+        toast({ title: 'Error', description: errors.join(' | '), variant: 'destructive' });
+        return;
+      }
       if (supabase && session && isAdmin) {
         const scopesByTab = {
           general: ['site','seo','contact'],
@@ -161,6 +167,8 @@ export default function AdminPanel() {
       }
     } catch (e) {
       // already notified by inner calls
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1190,7 +1198,13 @@ export default function AdminPanel() {
 
               {session && (
                 <div className="flex gap-3 mt-6">
-                  <Button onClick={handleSaveScoped} className="bg-blue-600 text-white">Save</Button>
+                  <Button
+                    onClick={handleSaveScoped}
+                    disabled={isSaving}
+                    className="bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </Button>
                   <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
                   <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
                 </div>

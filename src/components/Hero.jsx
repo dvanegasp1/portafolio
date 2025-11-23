@@ -30,6 +30,10 @@ export default function Hero() {
   const secondaryCta = hero.secondaryCta;
   const heroImage = resolveStorageUrl(hero.image_path);
   const educationCards = Array.isArray(content?.education) ? content.education : [];
+  const highlightCards = (() => {
+    const primary = Array.isArray(content?.whyUs) && content.whyUs.length ? content.whyUs : educationCards;
+    return Array.isArray(primary) ? primary.filter(Boolean) : [];
+  })();
 
   const scrollTo = (selector) => {
     if (!selector || typeof window === 'undefined') return;
@@ -202,8 +206,8 @@ export default function Hero() {
             ) : (
               <div className="w-full aspect-[4/3] rounded-2xl bg-gradient-to-br from-blue-900/60 to-cyan-900/40 border border-blue-500/20 shadow-2xl" />
             )}
-            {renderWhyCard(experienceCards[0], Users, '-top-6 -left-6')}
-            {renderWhyCard(experienceCards[1], Target, '-bottom-6 -right-6')}
+            {renderWhyCard(highlightCards[0], Users, '-top-6 -left-6')}
+            {renderWhyCard(highlightCards[1], Target, '-bottom-6 -right-6')}
           </motion.div>
         </div>
       </div>
