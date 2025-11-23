@@ -21,6 +21,9 @@ function cloneSeedList(seed) {
   return (seed || []).map((x) => ({ ...x }));
 }
 
+const EXPERIENCE_TABLE_CANDIDATES = ['experience', 'experiencie'];
+let resolvedExperienceTable = EXPERIENCE_TABLE_CANDIDATES[0];
+
 function dedupeProjects(list) {
   if (!Array.isArray(list)) return [];
   const seen = new Set();
@@ -51,6 +54,29 @@ function dedupeTags(tags) {
       return true;
     });
 }
+
+const isMissingTableError = (error) => {
+  if (!error) return false;
+  if (error.code === 'PGRST205') return true;
+  const text = `${error.message || ''} ${error.hint || ''}`.toLowerCase();
+  return text.includes('could not find the table');
+};
+
+const runExperienceQuery = async (executor) => {
+  if (typeof executor !== 'function') return { data: null, error: new Error('Invalid experience query') };
+  const attempts = [resolvedExperienceTable, ...EXPERIENCE_TABLE_CANDIDATES.filter((name) => name !== resolvedExperienceTable)];
+  for (const table of attempts) {
+    const result = await executor(table);
+    if (!result || !result.error) {
+      resolvedExperienceTable = table;
+      return result || { data: null, error: null };
+    }
+    if (!isMissingTableError(result.error)) {
+      return result;
+    }
+  }
+  return { data: null, error: { message: 'Experience table not found in Supabase.' } };
+};
 
 const servicesSeed = [
   {
@@ -316,11 +342,13 @@ if (!educationError && Array.isArray(educationRows) && educationRows.length) {
 }
 
 // experience
-const { data: experienceRows, error: experienceError } = await supabase
-  .from('experience')
-  .select('company, role, location, start_year, end_year, description, achievements, icon_path, sort_order')
-  .eq('site_id', 1)
-  .order('sort_order', { ascending: true });
+const { data: experienceRows, error: experienceError } = await runExperienceQuery((table) =>
+  supabase
+    .from(table)
+    .select('company, role, location, start_year, end_year, description, achievements, icon_path, sort_order')
+    .eq('site_id', 1)
+    .order('sort_order', { ascending: true }),
+);
 
 if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) {
   result.experience = experienceRows.map((row) => ({
@@ -333,6 +361,11 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
     achievements: parseMultilineList(row.achievements),
     icon_path: row.icon_path || null,
   }));
+} else if (experienceError && isMissingTableError(experienceError)) {
+  result.experience = cloneSeedList(experienceSeed);
+} else if (experienceError) {
+  console.warn('Error loading experience data:', experienceError);
+  result.experience = cloneSeedList(experienceSeed);
 } else {
   result.experience = cloneSeedList(experienceSeed);
 }
@@ -568,9 +601,10 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
     }
     // Experience
     if (should('experience')) {
-      const expDel = await supabase.from('experience').delete().eq('site_id', 1);
-      if (expDel?.error) errors.push(expDel.error);
-      if (Array.isArray(c.experience) && c.experience.length) {
+      const expDel = await runExperienceQuery((table) => supabase.from(table).delete().eq('site_id', 1));
+      if (expDel?.error) {
+        errors.push(expDel.error);
+      } else if (Array.isArray(c.experience) && c.experience.length) {
         const rows = c.experience.map((item, idx) => ({
           site_id: 1,
           company: item.company || '',
@@ -583,7 +617,7 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
           icon_path: item.icon_path || null,
           sort_order: (idx + 1) * 10,
         }));
-        const expIns = await supabase.from('experience').insert(rows);
+        const expIns = await runExperienceQuery((table) => supabase.from(table).insert(rows));
         if (expIns?.error) errors.push(expIns.error);
       }
     }

@@ -37,6 +37,7 @@ export default function AdminPanel() {
   const [openService, setOpenService] = useState(null);
   const [showServiceNav, setShowServiceNav] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const heroHighlights = Array.isArray(draft.whyUs) ? draft.whyUs : [];
 
   const servicesToRender = () => {
     if (openService === null) {
@@ -147,11 +148,10 @@ export default function AdminPanel() {
         const scopesByTab = {
           general: ['site','seo','contact'],
           branding: ['site'],
-          hero: ['hero'],
+          hero: ['hero','why_us'],
           about: ['about'],
           services: ['services'],
           projects: ['projects'],
-          whyus: ['why_us'],
           visibility: ['visibility'],
           contact: ['contact'],
           resume: ['education','experience','visibility','resume'],
@@ -456,6 +456,51 @@ export default function AdminPanel() {
                       <Field label="Enlace del Botón">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.href} onChange={(e)=>onChange('hero.secondaryCta.href', e.target.value)} />
                       </Field>
+                    </div>
+                  </div>
+                  <div className="pt-6 border-t border-white/10">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-semibold">Tarjetas flotantes (Why Us)</h4>
+                      <Button
+                        variant="ghost"
+                        onClick={() =>
+                          setDraft((d) => {
+                            const arr = Array.isArray(d.whyUs) ? [...d.whyUs] : [];
+                            arr.push({ icon: 'Users', title: '', subtitle: '' });
+                            return { ...d, whyUs: arr };
+                          })
+                        }
+                      >
+                        Agregar tarjeta
+                      </Button>
+                    </div>
+                    {heroHighlights.length === 0 && (
+                      <p className="text-sm text-gray-400 mb-4">Añade hasta dos tarjetas para mostrarlas sobre la imagen del hero.</p>
+                    )}
+                    <div className="space-y-4">
+                      {heroHighlights.map((w, i) => (
+                        <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
+                          <div className="grid md:grid-cols-3 gap-3">
+                            <Field label="Icono">
+                              <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.icon}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=Array.isArray(d.whyUs)?[...d.whyUs]:[]; arr[i]={...(arr[i]||{}), icon:v}; return {...d, whyUs:arr};}); }}>
+                                {['Users','Target'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            </Field>
+                            <Field label="Título">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.title}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=Array.isArray(d.whyUs)?[...d.whyUs]:[]; arr[i]={...(arr[i]||{}), title:v}; return {...d, whyUs:arr};}); }} />
+                            </Field>
+                            <Field label="Subtítulo">
+                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.subtitle}
+                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=Array.isArray(d.whyUs)?[...d.whyUs]:[]; arr[i]={...(arr[i]||{}), subtitle:v}; return {...d, whyUs:arr};}); }} />
+                            </Field>
+                          </div>
+                          <div className="text-right mt-2">
+                            <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, whyUs: Array.isArray(d.whyUs) ? d.whyUs.filter((_,idx)=>idx!==i) : [] }))}>Eliminar</Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -1159,40 +1204,6 @@ export default function AdminPanel() {
                   <Field label="Contact Email"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} /></Field>
                   <Field label="Location"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} /></Field>
                   <Field label="Schedule URL (Calendly, etc.)"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.scheduleUrl||''} onChange={(e)=>onChange('contact.scheduleUrl', e.target.value)} placeholder="https://calendly.com/usuario/llamada" /></Field>
-                </div>
-              )}
-
-              {tab === 'whyus' && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Why Us</h3>
-                  <div className="space-y-4">
-                    {draft.whyUs.map((w, i) => (
-                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
-                        <div className="grid md:grid-cols-3 gap-3">
-                          <Field label="Icon">
-                            <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.icon}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], icon:v}; return {...d, whyUs:arr};}); }}>
-                              {['Users','Target'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-                          </Field>
-                          <Field label="Title">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.title}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], title:v}; return {...d, whyUs:arr};}); }} />
-                          </Field>
-                          <Field label="Subtitle">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.subtitle}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.whyUs]; arr[i]={...arr[i], subtitle:v}; return {...d, whyUs:arr};}); }} />
-                          </Field>
-                        </div>
-                        <div className="text-right mt-2">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, whyUs: d.whyUs.filter((_,idx)=>idx!==i) }))}>Remove</Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, whyUs:[...d.whyUs,{ icon:'Users', title:'', subtitle:''}] }))}>Add Item</Button>
-                  </div>
                 </div>
               )}
 

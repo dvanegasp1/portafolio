@@ -29,11 +29,7 @@ export default function Hero() {
   const primaryCta = hero.primaryCta;
   const secondaryCta = hero.secondaryCta;
   const heroImage = resolveStorageUrl(hero.image_path);
-  const educationCards = Array.isArray(content?.education) ? content.education : [];
-  const highlightCards = (() => {
-    const primary = Array.isArray(content?.whyUs) && content.whyUs.length ? content.whyUs : educationCards;
-    return Array.isArray(primary) ? primary.filter(Boolean) : [];
-  })();
+  const highlightCards = Array.isArray(content?.whyUs) ? content.whyUs.filter(Boolean) : [];
 
   const scrollTo = (selector) => {
     if (!selector || typeof window === 'undefined') return;
