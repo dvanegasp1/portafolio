@@ -59,7 +59,7 @@ const Services = () => {
           </p>
         </motion.div>
 
-        <div className="flex justify-center gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {cards.map((service, index) => {
             if (loading) {
               return (

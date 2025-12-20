@@ -117,12 +117,11 @@ export default function About() {
             viewport={{ once: true }}
             className="order-2 lg:order-1 relative"
           >
-            <div className="relative group md:pl-6">
-              <div className="absolute -inset-[3px] rounded-[24px] bg-white/10 group-hover:bg-white/15 transition duration-500" />
-              <div className="relative rounded-[20px] overflow-hidden border border-white/5 group-hover:border-white/20 transition duration-500 shadow-xl flex items-center justify-center">
+            <div className="relative group max-w-[520px] w-full mx-auto">
+              <div className="relative rounded-[20px] overflow-hidden border border-white/10 group-hover:border-white/20 transition duration-500 shadow-2xl flex items-center justify-center bg-white/5 aspect-[4/5]">
                 {imageUrl ? (
                   <img
-                    className="w-3/4 h-3/4 object-cover rounded-[20px] transition duration-700 ease-out group-hover:scale-105 group-hover:rotate-[0.5deg]"
+                    className="w-full h-full object-cover transition duration-700 ease-out group-hover:scale-[1.02]"
                     alt={about.heading || 'Imagen de la sección Sobre mí'}
                     src={imageUrl}
                   />
@@ -131,7 +130,6 @@ export default function About() {
                     {loading ? <SkeletonBlock className="h-10 w-24" /> : <span className="text-white/60 tracking-[0.3em] uppercase text-[11px]">Imagen pendiente</span>}
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
               </div>
 
               <div className="absolute -top-4 -left-4 hidden lg:block">

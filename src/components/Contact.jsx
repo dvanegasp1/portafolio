@@ -22,7 +22,7 @@ export default function Contact() {
   const infoBlocks = [
     content.contact?.email ? { icon: Mail, title: 'Correo', details: content.contact.email, description: defaultDescription, link: `mailto:${content.contact.email}` } : null,
     content.contact?.phone ? { icon: Phone, title: 'Teléfono', details: content.contact.phone, description: content.contact?.hours || defaultDescription } : null,
-    content.contact?.location ? { icon: MapPin, title: 'Ubicaci?n', details: content.contact.location, description: defaultDescription } : null,
+    content.contact?.location ? { icon: MapPin, title: 'Ubicacion', details: content.contact.location, description: defaultDescription } : null,
     content.contact?.hours && !content.contact?.phone ? { icon: Clock, title: 'Horario', details: content.contact.hours, description: defaultDescription } : null,
     { icon: Linkedin, title: 'LinkedIn', details: 'Conecta conmigo', description: 'Perfil profesional', link: 'https://linkedin.com/in/tu-perfil' },
   ].filter(Boolean);

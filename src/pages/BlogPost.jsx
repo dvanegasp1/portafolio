@@ -59,13 +59,28 @@ export default function BlogPost({ slug }) {
   }
 
   const cover = resolveStorageUrl(post.cover_image_path);
+  const author = post.author || content?.siteName || '';
+  const downloadUrl = resolveStorageUrl(post.download_path);
+  const downloadLabel = post.download_label || 'Descargar archivo';
 
   return (
     <section className="py-20 relative overflow-hidden scroll-mt-40">
       <div className="container mx-auto px-6 max-w-3xl">
         <h1 className="text-4xl lg:text-5xl font-bold mb-2 text-white">{post.title}</h1>
+        {author && <div className="text-sm text-gray-400 mb-1">Por {author}</div>}
         {post.excerpt && <p className="text-lg text-gray-300 mb-6">{post.excerpt}</p>}
         {cover && <img src={cover} alt={post.title} className="w-full rounded-2xl border border-white/10 mb-8" />}
+        {downloadUrl && (
+          <a
+            href={downloadUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center mb-8 px-5 py-2.5 rounded-full border border-blue-500/60 text-blue-200 hover:text-white hover:bg-blue-500/10 transition-colors"
+            download
+          >
+            {downloadLabel}
+          </a>
+        )}
         <SimpleMarkdown text={post.content_md || ''} />
         {Array.isArray(post.tags) && post.tags.length > 0 && (
           <div className="flex gap-2 mt-8 flex-wrap">
@@ -76,4 +91,3 @@ export default function BlogPost({ slug }) {
     </section>
   );
 }
-

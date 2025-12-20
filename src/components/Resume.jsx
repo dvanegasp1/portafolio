@@ -119,7 +119,8 @@ export default function Resume() {
 
         {/* Experience */}
         {experience.length > 0 && (
-          <div>
+          <div className="relative">
+            <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-white/30 to-transparent mb-10 shadow-[0_0_24px_rgba(255,255,255,0.25)]" />
             <div className="text-purple-200 uppercase tracking-wide text-sm mb-2">Roles</div>
             <h3 className="text-3xl font-semibold mb-6">Experiencia.</h3>
             <div className="space-y-6">

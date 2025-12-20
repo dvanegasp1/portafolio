@@ -17,6 +17,7 @@ import Footer from '@/components/Footer';
 import { ContentProvider, useContent } from '@/content/ContentContext.jsx';
 import AdminPanel from '@/components/AdminPanel.jsx';
 import SimplePage from '@/pages/SimplePage.jsx';
+import Resources from '@/pages/Resources.jsx';
 
 function AppInner() {
   const { content, supa } = useContent();
@@ -107,13 +108,16 @@ function AppInner() {
           </SimplePage>
         )}
         {route === 'resources' && (
-          <SimplePage title="Recursos Gratuitos" subtitle="Plantillas, snippets y guías rápidas de analítica.">
-            <ul>
-              <li>Checklist de calidad de datos</li>
-              <li>Guía de KPIs para e-commerce</li>
-              <li>Snippet SQL de cohorts</li>
-            </ul>
-          </SimplePage>
+          <Resources />
+        )}
+        {route === 'articles' && (
+          <Resources filter="articulo" />
+        )}
+        {route === 'publications' && (
+          <Resources filter="publicacion" />
+        )}
+        {route === 'case-studies' && (
+          <Resources filter="caso" />
         )}
         {route === 'webinars' && (
           <SimplePage title="Webinars">
@@ -150,8 +154,5 @@ export default function App() {
     </ContentProvider>
   );
 }
-
-
-
 
 

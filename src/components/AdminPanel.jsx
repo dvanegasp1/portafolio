@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useContent } from '@/content/ContentContext.jsx';
 import { supabase } from '@/lib/supabaseClient.js';
 import { Button } from '@/components/ui/button.jsx';
 import { toast } from '@/components/ui/use-toast.js';
+import { slugify } from '@/lib/utils.js';
 
 const Field = ({ label, children }) => (
   <label className="block mb-3">
@@ -23,17 +24,26 @@ export default function AdminPanel() {
   const { content, setContent, resetContent, saveToSupabase, supa } = useContent();
   const [draft, setDraft] = useState(content);
   const [tab, setTab] = useState('general');
+  const [mode, setMode] = useState('portfolio'); // portfolio | blog
   const [session, setSession] = useState(null);
   const [auth, setAuth] = useState({ email: '' });
   const [magicSentTo, setMagicSentTo] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [heroFile, setHeroFile] = useState(null);
-  const [projectFiles, setProjectFiles] = useState({});
   const [logoFile, setLogoFile] = useState(null);
   const [aboutFile, setAboutFile] = useState(null);
   const [serviceFiles, setServiceFiles] = useState({});
   const [testimonialFiles, setTestimonialFiles] = useState({});
   const [educationFiles, setEducationFiles] = useState([]);
+  const [blogFiles, setBlogFiles] = useState({});
+  const [blogAttachmentFiles, setBlogAttachmentFiles] = useState({});
+  const [openPost, setOpenPost] = useState(0);
+  const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
   const [openService, setOpenService] = useState(null);
   const [showServiceNav, setShowServiceNav] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -46,6 +56,51 @@ export default function AdminPanel() {
     const svc = draft.services?.[openService];
     return svc ? [{ svc, idx: openService }] : [];
   };
+
+  const blogPosts = Array.isArray(draft.blogPosts) ? draft.blogPosts : [];
+  const updatePost = (idx, patch) => {
+    setDraft((d) => {
+      const arr = [...(d.blogPosts || [])];
+      arr[idx] = { ...(arr[idx] || {}), ...patch };
+      return { ...d, blogPosts: arr };
+    });
+  };
+  const removePost = (idx) => {
+    setDraft((d) => {
+      const arr = [...(d.blogPosts || [])];
+      arr.splice(idx, 1);
+      return { ...d, blogPosts: arr };
+    });
+  };
+  const addPost = () => {
+    setDraft((d) => {
+      const arr = [...(d.blogPosts || [])];
+      arr.push({
+        title: '',
+        slug: '',
+        excerpt: '',
+        content_md: '',
+        cover_image_path: null,
+        cover_alt: '',
+        download_path: null,
+        download_label: '',
+        meta_title: '',
+        meta_description: '',
+        author: draft?.siteName || '',
+        reading_time: null,
+        featured: false,
+        resource_type: null,
+        show_in_projects: false,
+        tags: [],
+        published: false,
+        published_at: null,
+        sort_order: (arr.length + 1) * 10,
+      });
+      return { ...d, blogPosts: arr };
+    });
+  };
+  const tagsToString = (tags) => (Array.isArray(tags) ? tags.join(', ') : '');
+  const parseTags = (value) => String(value || '').split(/[,|]/).map((s) => s.trim()).filter(Boolean);
 
   const parseDateValue = (value) => {
     if (!value) return -Infinity;
@@ -103,7 +158,13 @@ export default function AdminPanel() {
     return () => { cancelled = true; };
   }, [session]);
 
-  // (Legacy) save full draft – kept for reference; primary flow uses handleSaveScoped
+  // Keep tab consistent with selected mode
+  useEffect(() => {
+    if (mode === 'blog' && tab !== 'blog') setTab('blog');
+    if (mode === 'portfolio' && tab === 'blog') setTab('general');
+  }, [mode, tab]);
+
+  // (Legacy) save full draft ? kept for reference; primary flow uses handleSaveScoped
   const save = () => {
     try {
       setContent(draft);
@@ -139,30 +200,30 @@ export default function AdminPanel() {
     }
     setIsSaving(true);
     try {
-      const { errors } = await handleSave();
+      const { errors, snapshot } = await handleSave();
       if (errors && errors.length) {
         toast({ title: 'Error', description: errors.join(' | '), variant: 'destructive' });
         return;
       }
+      const payload = snapshot || draft;
       if (supabase && session && isAdmin) {
-        const scopesByTab = {
-          general: ['site','seo','contact'],
-          branding: ['site'],
-          hero: ['hero','why_us'],
-          about: ['about'],
-          services: ['services'],
-          projects: ['projects'],
-          visibility: ['visibility'],
-          contact: ['contact'],
-          resume: ['education','experience','visibility','resume'],
-          blog: ['blog'],
-        };
+          const scopesByTab = {
+            general: ['site','seo','contact'],
+            branding: ['site'],
+            hero: ['hero','why_us'],
+            about: ['about'],
+            services: ['services'],
+            visibility: ['visibility'],
+            contact: ['contact'],
+            resume: ['education','experience','visibility','resume'],
+            blog: ['blog'],
+          };
         const scopes = scopesByTab[tab] || ['all'];
-        const { error } = await saveToSupabase(draft, scopes);
+        const { error } = await saveToSupabase(payload, scopes);
         if (error) {
-          toast({ title: 'Sync parcial fall?', description: error.message || String(error), variant: 'destructive' });
+          toast({ title: 'Sincronización parcial falló', description: error.message || String(error), variant: 'destructive' });
         } else {
-          toast({ title: 'Guardado', description: 'Se guard? solo la secci?n actual.' });
+          toast({ title: 'Guardado', description: 'Se guardó solo la sección actual.' });
         }
       }
     } catch (e) {
@@ -192,7 +253,7 @@ export default function AdminPanel() {
     const errors = [];
     let next = draft;
     try {
-      // Upload logo first so it?s available in the same save
+      // Upload logo first so it's available in the same save
       if (logoFile) {
         let setLocalUrl = false;
         if (supabase) {
@@ -201,7 +262,7 @@ export default function AdminPanel() {
           if (upErr) {
             setLocalUrl = true;
             errors.push(upErr.message || 'No se pudo subir logo a Supabase');
-            toast({ title: 'No se pudo subir a Supabase', description: upErr.message + '. Se usar?a vista local temporal.', variant: 'default' });
+            toast({ title: 'No se pudo subir a Supabase', description: upErr.message + '. Se usaría vista local temporal.', variant: 'default' });
           } else {
             next = { ...next, branding: { ...(next.branding||{}), logo_path: key } };
             setDraft(next);
@@ -262,9 +323,77 @@ export default function AdminPanel() {
               const servicesSafe = Array.isArray(next.services) ? next.services : [];
               next = { ...next, services: servicesSafe.map((s, i) => i == idx ? { ...s, icon_path: key } : s) };
               setDraft(next);
+          }
+        }
+      }
+      if (Object.keys(blogFiles).length > 0) {
+        let changed = false;
+        const nextPosts = [...(next.blogPosts || [])];
+        const canUpload = !!supabase && !!session && isAdmin;
+        for (const [idx, file] of Object.entries(blogFiles)) {
+          const postIdx = Number(idx);
+          if (!Number.isInteger(postIdx) || !file) continue;
+          if (!nextPosts[postIdx]) continue;
+
+          if (canUpload) {
+            const key = `blog/covers/${Date.now()}-${file.name}`.replace(/\s+/g, '-');
+            const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
+            if (upErr) {
+              errors.push(upErr.message || `No se pudo subir portada del post ${postIdx + 1}`);
+              toast({ title: 'Error subiendo portada', description: upErr.message, variant: 'destructive' });
+            } else {
+              nextPosts[postIdx] = { ...(nextPosts[postIdx] || {}), cover_image_path: key };
+              changed = true;
+            }
+          } else {
+            try {
+              const dataUrl = await fileToDataUrl(file);
+              nextPosts[postIdx] = { ...(nextPosts[postIdx] || {}), cover_image_path: String(dataUrl) };
+              changed = true;
+            } catch (err) {
+              errors.push(err?.message || `No se pudo generar vista local de la portada del post ${postIdx + 1}`);
             }
           }
         }
+        if (changed) {
+          next = { ...next, blogPosts: nextPosts };
+          setDraft(next);
+        }
+        setBlogFiles({});
+      }
+      if (Object.keys(blogAttachmentFiles).length > 0) {
+        let changed = false;
+        const nextPosts = [...(next.blogPosts || [])];
+        const canUpload = !!supabase && !!session && isAdmin;
+        for (const [idx, file] of Object.entries(blogAttachmentFiles)) {
+          const postIdx = Number(idx);
+          if (!Number.isInteger(postIdx) || !file) continue;
+          if (!nextPosts[postIdx]) continue;
+          if (!canUpload) {
+            errors.push('Inicia sesión como Admin para subir archivos descargables.');
+            continue;
+          }
+          const safeName = String(file.name || 'archivo').replace(/[^a-zA-Z0-9._-]/g, '_');
+          const key = `blog/files/${Date.now()}-${safeName}`;
+          const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
+          if (upErr) {
+            errors.push(upErr.message || `No se pudo subir archivo del post ${postIdx + 1}`);
+            toast({ title: 'Error subiendo archivo', description: upErr.message, variant: 'destructive' });
+          } else {
+            nextPosts[postIdx] = {
+              ...(nextPosts[postIdx] || {}),
+              download_path: key,
+              download_label: nextPosts[postIdx]?.download_label || file.name || 'Descargar archivo',
+            };
+            changed = true;
+          }
+        }
+        if (changed) {
+          next = { ...next, blogPosts: nextPosts };
+          setDraft(next);
+        }
+        setBlogAttachmentFiles({});
+      }
         setServiceFiles({});
       }
       if (educationFiles.length > 0 && supabase && session && isAdmin) {
@@ -310,7 +439,7 @@ export default function AdminPanel() {
       console.error('Error al guardar cambios:', e);
       errors.push(e?.message || 'Error desconocido al guardar');
     }
-    return { errors };
+    return { errors, snapshot: next };
   };
 
 
@@ -322,17 +451,33 @@ export default function AdminPanel() {
           <div className="grid grid-cols-1 md:grid-cols-[220px_1fr]">
             {/* Sidebar */}
             <aside className="bg-white/5 p-4 border-r border-white/10">
-              <div className="text-sm uppercase tracking-wide text-gray-400 mb-3">Secciones</div>
+                <div className="text-sm uppercase tracking-wide text-gray-400 mb-2">Secciones</div>
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setMode('portfolio')}
+                    className={`px-3 py-1 rounded-full text-sm border ${mode==='portfolio' ? 'bg-blue-600/40 border-blue-400 text-white' : 'border-white/10 text-gray-300 hover:bg-white/10'}`}
+                  >
+                    Portfolio
+                  </button>
+                  <button
+                    onClick={() => setMode('blog')}
+                    className={`px-3 py-1 rounded-full text-sm border ${mode==='blog' ? 'bg-blue-600/40 border-blue-400 text-white' : 'border-white/10 text-gray-300 hover:bg-white/10'}`}
+                  >
+                    Blog
+                  </button>
+                </div>
 
-              <button onClick={() => setTab('hero')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='hero'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Hero</button>
-              <button onClick={() => setTab('about')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='about'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Sobre Mi</button>
+                {mode === 'portfolio' && (
+                  <>
+                <button onClick={() => setTab('hero')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='hero'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Hero</button>
+                <button onClick={() => setTab('about')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='about'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Sobre Mi</button>
 
               <div className="mb-1">
                 <button
                   onClick={() => { setTab('services'); setShowServiceNav((v) => !v); }}
                   className={`w-full text-left px-3 py-2 rounded ${tab==='services'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}
                 >
-                  Servicios {showServiceNav ? '▾' : '▸'}
+                  Servicios {showServiceNav ? '-' : '+'}
                 </button>
                 {showServiceNav && (
                   <div className="mt-1 ml-3 space-y-1">
@@ -350,14 +495,18 @@ export default function AdminPanel() {
               </div>
 
               <button onClick={() => setTab('experience')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='experience'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Experiencia</button>
-              <button onClick={() => setTab('education')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='education'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Educación</button>
-              <button onClick={() => setTab('contact')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='contact'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Contacto</button>
-              <button onClick={() => setTab('projects')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='projects'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Proyectos</button>
-              <button onClick={() => setTab('testimonials')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='testimonials'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Testimonios</button>
-              <button onClick={() => setTab('general')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='general'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>General</button>
-              <button onClick={() => setTab('branding')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='branding'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Branding</button>
-              <button onClick={() => setTab('footer')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='footer'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Footer</button>
-              <button onClick={() => setTab('visibility')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='visibility'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Visibilidad</button>
+                <button onClick={() => setTab('education')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='education'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Educación</button>
+                <button onClick={() => setTab('contact')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='contact'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Contacto</button>
+                    <button onClick={() => setTab('testimonials')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='testimonials'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Testimonios</button>
+                    <button onClick={() => setTab('general')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='general'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>General</button>
+                    <button onClick={() => setTab('branding')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='branding'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Branding</button>
+                    <button onClick={() => setTab('footer')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='footer'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Footer</button>
+                    <button onClick={() => setTab('visibility')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='visibility'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Visibilidad</button>
+                  </>
+                )}
+                {mode === 'blog' && (
+                  <button onClick={() => setTab('blog')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='blog'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Blog</button>
+                )}
 
               {/* Auth box */}
               <div className="mt-6 p-3 rounded bg-white/5 border border-white/10">
@@ -395,7 +544,7 @@ export default function AdminPanel() {
                       </span>
                     </div>
                     <div className="text-[11px] text-gray-400 mt-1">Solo usuarios Admin pueden sincronizar con Supabase.</div>
-                    <Button onClick={async()=>{ await supabase.auth.signOut(); }} variant="outline" className="w-full mt-2">Sign Out</Button>
+                    <Button onClick={async()=>{ await supabase.auth.signOut(); }} variant="outline" className="w-full mt-2">Cerrar sesión</Button>
                   </div>
                 )}
               </div>
@@ -403,7 +552,7 @@ export default function AdminPanel() {
 
             {/* Content */}
             <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Admin — Portfolio Settings</h2>
+              <h2 className="text-2xl font-bold mb-4">Admin — Configuración del portafolio</h2>
 
               {tab === 'hero' && (
                 <div className="space-y-6">
@@ -767,60 +916,267 @@ export default function AdminPanel() {
                 </div>
               )}
 
-              {tab === 'projects' && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Proyectos</h3>
+                {tab === 'blog' && (
                   <div className="space-y-4">
-                    {draft.projects.map((p, i) => (
-                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <Field label="Título del Proyecto">
-                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.title}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], title:v}; return {...d, projects:arr};}); }} />
+                    <div className="flex items-center justify-between gap-4">
+                      <h3 className="text-lg font-semibold">Blog</h3>
+                      <Button onClick={addPost} className="bg-blue-600 text-white hover:bg-blue-700">Agregar post</Button>
+                    </div>
+                    {blogPosts.length === 0 && (
+                      <div className="text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl p-4">
+                        Aún no hay posts. Usa "Agregar post" para crear el primero.
+                      </div>
+                    )}
+                    {blogPosts.map((post, i) => {
+                      const cover = resolveStorageUrl(post.cover_image_path);
+                      const slugValue = post.slug || slugify(post.title || `post-${i + 1}`);
+                      return (
+                        <div key={i} className="glass-effect rounded-xl p-4 border border-white/10 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="text-white font-semibold">
+                              {post.title?.trim() || `Post ${i + 1}`}
+                              <span className="text-xs text-gray-400 ml-2">({slugValue})</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                className="text-sm px-3 py-1 rounded border border-white/20 text-gray-200 hover:bg-white/10"
+                                onClick={()=> setOpenPost((prev)=> prev === i ? -1 : i)}
+                              >
+                                {openPost === i ? 'Ocultar' : 'Editar'}
+                              </button>
+                              <Button variant="outline" className="text-red-300 border-red-400/50 hover:bg-red-500/10" onClick={()=> removePost(i)}>
+                                Eliminar
+                              </Button>
+                            </div>
+                          </div>
+
+                          {openPost === i && (
+                            <>
+                            <div className="flex items-center gap-3">
+                              <label className="flex items-center gap-2 text-sm text-gray-300">
+                                <input
+                                  type="checkbox"
+                                  checked={!!post.featured}
+                                  onChange={(e)=> updatePost(i, { featured: e.target.checked })}
+                                />
+                                Destacado
+                              </label>
+                              <label className="flex items-center gap-2 text-sm text-gray-300">
+                                <input
+                                  type="checkbox"
+                                  checked={!!post.published}
+                                  onChange={(e)=> {
+                                    const nextPublished = e.target.checked;
+                                    updatePost(i, {
+                                      published: nextPublished,
+                                      published_at: nextPublished ? (post.published_at || new Date().toISOString()) : null,
+                                    });
+                                  }}
+                                />
+                                Publicado
+                              </label>
+                              <label className="flex items-center gap-2 text-sm text-gray-300">
+                                <input
+                                  type="checkbox"
+                                  checked={!!post.show_in_projects}
+                                  onChange={(e)=> updatePost(i, { show_in_projects: e.target.checked })}
+                                />
+                                Mostrar en Proyectos
+                              </label>
+                            </div>
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <Field label="Título">
+                              <input
+                                className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={post.title || ''}
+                                onChange={(e)=> updatePost(i, { title: e.target.value })}
+                                onBlur={(e)=> {
+                                  const val = e.target.value;
+                                  if (!post.slug && val) updatePost(i, { slug: slugify(val) });
+                                }}
+                              />
                             </Field>
-                            <Field label="Descripción">
-                              <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.description}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], description:v}; return {...d, projects:arr};}); }} />
-                            </Field>
-                            <Field label="Enlace (opcional)">
-                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.link||''}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], link:v}; return {...d, projects:arr};}); }} />
+                            <Field label="Slug">
+                              <input
+                                className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={post.slug || ''}
+                                onChange={(e)=> updatePost(i, { slug: slugify(e.target.value) })}
+                                placeholder="mi-primer-post"
+                              />
                             </Field>
                           </div>
-                          <div>
-                            <Field label="Etiquetas (separadas por coma)">
-                              <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(p.tags||[]).join(', ')}
-                                onChange={(e)=>{ const arrTags=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], tags:arrTags}; return {...d, projects:arr};}); }} />
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <Field label="Tiempo de lectura (min)">
+                              <input
+                                type="number"
+                                min="0"
+                                className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={post.reading_time ?? ''}
+                                onChange={(e)=> updatePost(i, { reading_time: e.target.value ? Number(e.target.value) : null })}
+                              />
                             </Field>
-                            <Field label="Ícono Representativo">
-                              <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.icon || 'BarChart3'}
-                                onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], icon:v}; return {...d, projects:arr};}); }}>
-                                {['BarChart3','Brain','Settings','FileText','Code','Database','LineChart','Workflow'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
+                            <Field label="Tipo de recurso">
+                              <select
+                                className="w-full bg-[#0b1220]/60 border border-white/20 rounded px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+                                value={post.resource_type || ''}
+                                onChange={(e)=> updatePost(i, { resource_type: e.target.value || null })}
+                              >
+                                <option value="">Ninguno</option>
+                                <option value="articulo">Arti­culo</option>
+                                <option value="publicacion">Publicaciones</option>
+                                <option value="caso">Caso de Estudio</option>
                               </select>
                             </Field>
-                            <Field label="Imagen de Portada (opcional)">
-                              <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setProjectFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
-                              {p.cover_image_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {p.cover_image_path}</div>}
-                              {resolveStorageUrl(p.cover_image_path) ? (
-                                <img src={resolveStorageUrl(p.cover_image_path)} alt="Portada actual" className="w-24 h-16 object-cover rounded border border-white/10 mt-2" />
-                              ) : (
-                                <div className="w-24 h-16 rounded border border-dashed border-white/20 flex items-center justify-center text-gray-500 mt-2">Sin vista</div>
-                              )}
+                          </div>
+
+                          <Field label="Extracto">
+                            <textarea
+                              rows={2}
+                              className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                              value={post.excerpt || ''}
+                              onChange={(e)=> updatePost(i, { excerpt: e.target.value })}
+                            />
+                          </Field>
+
+                          <Field label="Contenido (Markdown)">
+                            <textarea
+                              rows={8}
+                              className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                              value={post.content_md || ''}
+                              onChange={(e)=> updatePost(i, { content_md: e.target.value })}
+                            />
+                          </Field>
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <Field label="Imagen de portada (ruta o URL)">
+                              <div className="space-y-2">
+                                <input
+                                  className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                  value={post.cover_image_path || ''}
+                                  onChange={(e)=> updatePost(i, { cover_image_path: e.target.value || null })}
+                                  placeholder="portfolio-assets/blog/cover.png"
+                                />
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="text-sm"
+                                  onChange={(e)=> {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      setBlogFiles((m)=> ({ ...m, [i]: file }));
+                                      fileToDataUrl(file).then((url)=> {
+                                        updatePost(i, { cover_image_path: String(url) });
+                                      }).catch(()=>{});
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </Field>
+                            <Field label="Alt de la portada">
+                              <input
+                                className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={post.cover_alt || ''}
+                                onChange={(e)=> updatePost(i, { cover_alt: e.target.value })}
+                                placeholder="Descripción de la imagen"
+                              />
                             </Field>
                           </div>
+                          {cover && (
+                            <div className="text-sm text-gray-300">
+                              <div className="mb-2">Vista previa:</div>
+                              <img src={cover} alt={post.cover_alt || post.title || 'Cover'} className="w-full max-h-56 object-cover rounded-lg border border-white/10" />
+                            </div>
+                          )}
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <Field label="Archivo descargable (opcional)">
+                              <div className="space-y-2">
+                                <input
+                                  className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                  value={post.download_path || ''}
+                                  onChange={(e)=> updatePost(i, { download_path: e.target.value || null })}
+                                  placeholder="blog/files/mi-archivo.pdf"
+                                />
+                                <input
+                                  type="file"
+                                  className="text-sm"
+                                  onChange={(e)=> {
+                                    const file = e.target.files?.[0];
+                                    if (file) setBlogAttachmentFiles((m)=> ({ ...m, [i]: file }));
+                                  }}
+                                />
+                                {post.download_path && (
+                                  <a
+                                    href={resolveStorageUrl(post.download_path) || '#'}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-sm text-blue-300 hover:text-white inline-flex items-center gap-2"
+                                  >
+                                    Ver archivo actual
+                                  </a>
+                                )}
+                              </div>
+                            </Field>
+                            <Field label="Texto del botón (opcional)">
+                              <input
+                                className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={post.download_label || ''}
+                                onChange={(e)=> updatePost(i, { download_label: e.target.value })}
+                                placeholder="Descargar archivo"
+                              />
+                            </Field>
+                          </div>
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <Field label="Tags (separadas por coma o |)">
+                              <input
+                                className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={tagsToString(post.tags)}
+                                onChange={(e)=> updatePost(i, { tags: parseTags(e.target.value) })}
+                                placeholder="analytics, data, bi"
+                              />
+                            </Field>
+                            <Field label="Orden (sort_order)">
+                              <input
+                                type="number"
+                                className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={post.sort_order ?? (i + 1) * 10}
+                                onChange={(e)=> updatePost(i, { sort_order: e.target.value ? Number(e.target.value) : null })}
+                              />
+                            </Field>
+                          </div>
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <Field label="Meta title (opcional)">
+                              <input
+                                className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={post.meta_title || ''}
+                                onChange={(e)=> updatePost(i, { meta_title: e.target.value })}
+                              />
+                            </Field>
+                            <Field label="Meta description (opcional)">
+                              <input
+                                className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
+                                value={post.meta_description || ''}
+                                onChange={(e)=> updatePost(i, { meta_description: e.target.value })}
+                              />
+                            </Field>
+                          </div>
+
+                          <div className="text-xs text-gray-400">
+                            Slug final: <span className="text-white">{slugValue}</span>
+                            {post.published_at && <span className="ml-2">| Publicado: {new Date(post.published_at).toLocaleString()}</span>}
+                          </div>
+                          </>
+                          )}
                         </div>
-                        <div className="text-right mt-2">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, projects: d.projects.filter((_,idx)=>idx!==i) }))}>Eliminar Proyecto</Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
-                  <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, projects:[...d.projects,{ title:'', description:'', tags:[], link:'', icon:'BarChart3', cover_image_path:null}] }))}>Agregar Proyecto</Button>
-                  </div>
-                </div>
-              )}
+                )}
 
               {tab === 'testimonials' && (
                 <div>
@@ -958,10 +1314,10 @@ export default function AdminPanel() {
                     <Field label="Role">
                       <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.role} onChange={(e)=>onChange('role', e.target.value)} />
                     </Field>
-                    <Field label="Contact Email">
+                    <Field label="Email de contacto">
                       <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} />
                     </Field>
-                    <Field label="Location">
+                    <Field label="Ubicación">
                       <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} />
                     </Field>
                   </div>
@@ -1076,7 +1432,7 @@ export default function AdminPanel() {
                       <div>
                         <h5 className="text-sm font-medium text-gray-300 mb-2">Empresa</h5>
                         <Field label="Link 1">
-                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[0]?.label || 'Sobre mí'} onChange={(e)=>onChange('footer.company.0.label', e.target.value)} />
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[0]?.label || 'Sobre m?'} onChange={(e)=>onChange('footer.company.0.label', e.target.value)} />
                         </Field>
                         <Field label="Enlace 1">
                           <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[0]?.href || '#/about'} onChange={(e)=>onChange('footer.company.0.href', e.target.value)} />
@@ -1147,63 +1503,18 @@ export default function AdminPanel() {
 
               {tab === 'visibility' && (
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.services} onChange={(e)=>onChange('visibility.services', e.target.checked)} /> <span>Show Services</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.projects} onChange={(e)=>onChange('visibility.projects', e.target.checked)} /> <span>Show Projects</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.testimonials} onChange={(e)=>onChange('visibility.testimonials', e.target.checked)} /> <span>Show Testimonials</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.resume} onChange={(e)=>onChange('visibility.resume', e.target.checked)} /> <span>Show Resume</span></label>
-                </div>
-              )}
-
-              {tab === 'projects' && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Projects</h3>
-                  <div className="space-y-4">
-                    {draft.projects.map((p, i) => (
-                      <div key={i} className="glass-effect rounded-xl p-4 border border-white/10">
-                        <div className="grid md:grid-cols-2 gap-3">
-                          <Field label="Title">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.title}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], title:v}; return {...d, projects:arr};}); }} />
-                          </Field>
-                          <Field label="Link">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.link||''}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], link:v}; return {...d, projects:arr};}); }} />
-                          </Field>
-                          <Field label="Description">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={p.description}
-                              onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], description:v}; return {...d, projects:arr};}); }} />
-                          </Field>
-                          <Field label="Tags (comma-separated)">
-                            <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(p.tags||[]).join(', ')}
-                              onChange={(e)=>{ const arrTags=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...d.projects]; arr[i]={...arr[i], tags:arrTags}; return {...d, projects:arr};}); }} />
-                          </Field>
-                          <Field label="Cover Image">
-                            <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setProjectFiles(prev=> ({...prev, [i]: e.target.files?.[0]||null}))} />
-                            {p.cover_image_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {p.cover_image_path}</div>}
-                              {resolveStorageUrl(p.cover_image_path) ? (
-                                <img src={resolveStorageUrl(p.cover_image_path)} alt="Portada actual" className="w-24 h-16 object-cover rounded border border-white/10 mt-2" />
-                              ) : (
-                                <div className="w-24 h-16 rounded border border-dashed border-white/20 flex items-center justify-center text-gray-500 mt-2">Sin vista</div>
-                              )}
-                          </Field>
-                        </div>
-                        <div className="text-right mt-2">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, projects: d.projects.filter((_,idx)=>idx!==i) }))}>Remove</Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, projects:[...d.projects,{ title:'', description:'', tags:[], link:'', cover_image_path:null}] }))}>Add Project</Button>
-                  </div>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.services} onChange={(e)=>onChange('visibility.services', e.target.checked)} /> <span>Mostrar servicios</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.projects} onChange={(e)=>onChange('visibility.projects', e.target.checked)} /> <span>Mostrar proyectos</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.testimonials} onChange={(e)=>onChange('visibility.testimonials', e.target.checked)} /> <span>Mostrar testimonios</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.resume} onChange={(e)=>onChange('visibility.resume', e.target.checked)} /> <span>Mostrar experiencia y educación</span></label>
                 </div>
               )}
 
               {tab === 'contact' && (
                 <div className="grid md:grid-cols-2 gap-6">
-                  <Field label="Contact Email"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} /></Field>
-                  <Field label="Location"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} /></Field>
-                  <Field label="Schedule URL (Calendly, etc.)"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.scheduleUrl||''} onChange={(e)=>onChange('contact.scheduleUrl', e.target.value)} placeholder="https://calendly.com/usuario/llamada" /></Field>
+                  <Field label="Email de contacto"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} /></Field>
+                  <Field label="Ubicación"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} /></Field>
+                  <Field label="URL de agendamiento (Calendly, etc.)"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.scheduleUrl||''} onChange={(e)=>onChange('contact.scheduleUrl', e.target.value)} placeholder="https://calendly.com/usuario/llamada" /></Field>
                 </div>
               )}
 
@@ -1214,17 +1525,17 @@ export default function AdminPanel() {
                     disabled={isSaving}
                     className="bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSaving ? 'Saving...' : 'Save'}
+                    {isSaving ? 'Guardando...' : 'Guardar'}
                   </Button>
-                  <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
-                  <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
+                  <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Restablecer</Button>
+                  <a href="#" className="ml-auto"><Button variant="ghost">Salir del Admin</Button></a>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <p className="text-xs text-gray-400 mt-4">Tip: Open admin anytime by adding #admin to the URL. {supa.loading ? 'Syncing with Supabase...' : ''} {supa.error ? `(Supabase error: ${supa.error})` : ''}</p>
+        <p className="text-xs text-gray-400 mt-4">Tip: abre el panel admin en cualquier momento agregando #admin a la URL. {supa.loading ? 'Sincronizando con Supabase...' : ''} {supa.error ? `(Error de Supabase: ${supa.error})` : ''}</p>
       </div>
     </div>
   );

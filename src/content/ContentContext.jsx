@@ -62,6 +62,12 @@ const isMissingTableError = (error) => {
   return text.includes('could not find the table');
 };
 
+const isMissingColumnError = (error) => {
+  if (!error) return false;
+  const text = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`.toLowerCase();
+  return text.includes('column') && text.includes('does not exist');
+};
+
 const runExperienceQuery = async (executor) => {
   if (typeof executor !== 'function') return { data: null, error: new Error('Invalid experience query') };
   const attempts = [resolvedExperienceTable, ...EXPERIENCE_TABLE_CANDIDATES.filter((name) => name !== resolvedExperienceTable)];
@@ -418,12 +424,26 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
     if (resumeMeta) result.resumeSummary = resumeMeta.summary || '';
 
     // blog posts (respect RLS: public sees only published, admins see all)
-    const { data: posts } = await supabase
+    const blogSelectFull = 'title, slug, excerpt, content_md, cover_image_path, cover_alt, meta_title, meta_description, author, reading_time, featured, tags, published, published_at, sort_order, resource_type, show_in_projects, download_path, download_label';
+    const blogSelectFallback = 'title, slug, excerpt, content_md, cover_image_path, tags, published, published_at, sort_order';
+    let posts = null;
+    const blogResult = await supabase
       .from('blog_posts')
-      .select('title, slug, excerpt, content_md, cover_image_path, tags, published, published_at, sort_order')
+      .select(blogSelectFull)
       .eq('site_id', 1)
       .order('published_at', { ascending: false, nullsFirst: false })
       .order('sort_order', { ascending: false });
+    if (blogResult?.error && isMissingColumnError(blogResult.error)) {
+      const fallbackResult = await supabase
+        .from('blog_posts')
+        .select(blogSelectFallback)
+        .eq('site_id', 1)
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .order('sort_order', { ascending: false });
+      posts = fallbackResult?.data ?? null;
+    } else {
+      posts = blogResult?.data ?? null;
+    }
     if (posts) {
       result.blogPosts = posts.map((p) => ({
         title: p.title,
@@ -431,6 +451,16 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
         excerpt: p.excerpt || '',
         content_md: p.content_md || '',
         cover_image_path: p.cover_image_path || null,
+        cover_alt: p.cover_alt || '',
+        meta_title: p.meta_title || '',
+        meta_description: p.meta_description || '',
+        author: p.author || '',
+        reading_time: typeof p.reading_time === 'number' ? p.reading_time : (p.reading_time ? Number.parseInt(p.reading_time, 10) || null : null),
+        featured: !!p.featured,
+        resource_type: p.resource_type || null,
+        show_in_projects: !!p.show_in_projects,
+        download_path: p.download_path || null,
+        download_label: p.download_label || '',
         tags: typeof p.tags === 'string' ? p.tags.split('|').map((s) => s.trim()).filter(Boolean) : Array.isArray(p.tags) ? p.tags : [],
         published: !!p.published,
         published_at: p.published_at || null,
@@ -700,12 +730,26 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
           excerpt: p.excerpt || '',
           content_md: p.content_md || '',
           cover_image_path: p.cover_image_path || null,
+          cover_alt: p.cover_alt || null,
+          meta_title: p.meta_title || null,
+          meta_description: p.meta_description || null,
+          author: p.author || null,
+          reading_time: typeof p.reading_time === 'number' ? p.reading_time : (p.reading_time ? Number.parseInt(p.reading_time, 10) || null : null),
+          featured: !!p.featured,
+          resource_type: p.resource_type || null,
+          show_in_projects: !!p.show_in_projects,
+          download_path: p.download_path || null,
+          download_label: p.download_label || null,
           tags: Array.isArray(p.tags) ? p.tags.map((s)=>String(s||'').trim()).filter(Boolean).join('|') : (p.tags || null),
           published: !!p.published,
           published_at: p.published ? (p.published_at || new Date().toISOString()) : null,
           sort_order: (idx + 1) * 10,
         }));
-        const sBlog = await supabase.from('blog_posts').upsert(rows, { onConflict: 'site_id,slug' });
+        let sBlog = await supabase.from('blog_posts').upsert(rows, { onConflict: 'site_id,slug' });
+        if (sBlog.error && isMissingColumnError(sBlog.error)) {
+          const fallbackRows = rows.map(({ download_path, download_label, resource_type, show_in_projects, cover_alt, meta_title, meta_description, author, reading_time, featured, ...rest }) => rest);
+          sBlog = await supabase.from('blog_posts').upsert(fallbackRows, { onConflict: 'site_id,slug' });
+        }
         if (sBlog.error) errors.push(sBlog.error);
       }
     }
@@ -730,11 +774,6 @@ if (!experienceError && Array.isArray(experienceRows) && experienceRows.length) 
 export function useContent() {
   return useContext(ContentContext);
 }
-
-
-
-
-
 
 
 

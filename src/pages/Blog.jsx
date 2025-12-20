@@ -50,27 +50,30 @@ export default function Blog() {
         )}
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((p, i) => (
-            <motion.article key={p.slug || i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.03 }} className="glass-effect rounded-2xl p-4 border border-white/10 hover:border-blue-500/40">
-              <button onClick={() => openPost(p.slug)} className="text-left w-full">
-                {p.cover_image_path && (
-                  <img src={resolveStorageUrl(p.cover_image_path)} alt={p.title} className="w-full h-40 object-cover rounded-xl mb-3" />
-                )}
-                <h3 className="text-xl font-semibold text-white">{p.title}</h3>
-                <p className="text-gray-300 mt-2">{p.excerpt}</p>
-                {Array.isArray(p.tags) && p.tags.length > 0 && (
-                  <div className="flex gap-2 mt-3 flex-wrap">
-                    {p.tags.map((t, ti) => (
-                      <span key={ti} className="text-xs bg-white/10 text-gray-200 px-2 py-0.5 rounded">{t}</span>
-                    ))}
-                  </div>
-                )}
-              </button>
-            </motion.article>
-          ))}
+          {posts.map((p, i) => {
+            const author = p.author || content.siteName || '';
+            return (
+              <motion.article key={p.slug || i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.03 }} className="glass-effect rounded-2xl p-4 border border-white/10 hover:border-blue-500/40">
+                <button onClick={() => openPost(p.slug)} className="text-left w-full">
+                  {p.cover_image_path && (
+                    <img src={resolveStorageUrl(p.cover_image_path)} alt={p.title} className="w-full h-40 object-cover rounded-xl mb-3" />
+                  )}
+                  <h3 className="text-xl font-semibold text-white">{p.title}</h3>
+                  {author && <div className="text-sm text-gray-400 mt-1">Por {author}</div>}
+                  <p className="text-gray-300 mt-2">{p.excerpt}</p>
+                  {Array.isArray(p.tags) && p.tags.length > 0 && (
+                    <div className="flex gap-2 mt-3 flex-wrap">
+                      {p.tags.map((t, ti) => (
+                        <span key={ti} className="text-xs bg-white/10 text-gray-200 px-2 py-0.5 rounded">{t}</span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              </motion.article>
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
-
