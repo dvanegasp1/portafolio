@@ -59,19 +59,19 @@ const Services = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="flex justify-center gap-8">
           {cards.map((service, index) => {
             if (loading) {
               return (
                 <motion.div
                   key={index}
-                  className="glass-effect rounded-2xl p-8 h-full border border-white/10"
+                  className="glass-effect rounded-2xl p-6 h-64 border border-white/10"
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: index * 0.05 }}
                   viewport={{ once: true }}
                 >
-                  <SkeletonBlock className="w-16 h-16 mb-6 mx-auto" />
+                  <SkeletonBlock className="w-16 h-16 mb-4 mx-auto" />
                   <SkeletonBlock className="h-6 w-32 mx-auto mb-4" />
                   <SkeletonBlock className="h-4 w-full" />
                   <SkeletonBlock className="h-4 w-5/6 mt-2" />
@@ -90,7 +90,7 @@ const Services = () => {
 
             const Icon = iconMap[service.icon] || BarChart3;
             const iconWrapperClasses = [
-              'w-20 h-20 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110',
+              'w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110',
               thumbnail ? 'overflow-hidden bg-white/5 border border-white/10 shadow-inner' : 'bg-gradient-to-r from-purple-500 to-pink-500'
             ].join(' ');
 
@@ -112,14 +112,14 @@ const Services = () => {
                 <button
                   type="button"
                   onClick={goToServiceDetail}
-                  className="glass-effect rounded-2xl p-8 h-full w-full text-center hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 cursor-pointer"
+                  className="glass-effect rounded-2xl p-6 h-64 w-64 text-center hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 cursor-pointer"
                 >
                   <div className="text-center">
                     <div className={iconWrapperClasses}>
                       {thumbnail ? (
                         <img src={thumbnail} alt={service.title || 'Icono del servicio'} className="w-full h-full object-cover" />
                       ) : (
-                        <Icon className="w-10 h-10 text-white" />
+                        <Icon className="w-8 h-8 text-white" />
                       )}
                     </div>
                   </div>
