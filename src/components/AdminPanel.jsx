@@ -1025,8 +1025,8 @@ export default function AdminPanel() {
                                 onChange={(e)=> updatePost(i, { resource_type: e.target.value || null })}
                               >
                                 <option value="">Ninguno</option>
-                                <option value="articulo">ArtÃ­culo</option>
-                                <option value="publicacion">PublicaciÃ³n</option>
+                                <option value="articulo">Arti­culo</option>
+                                <option value="publicacion">Publicaciones</option>
                                 <option value="caso">Caso de Estudio</option>
                               </select>
                             </Field>
