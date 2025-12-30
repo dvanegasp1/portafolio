@@ -61,9 +61,13 @@ const Footer = () => {
           <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="lg:col-span-2">
             <div className="flex items-center space-x-2 mb-6">
               {logoUrl ? (
-                <img src={logoUrl} alt={content.siteName + ' logo'} className="w-10 h-10 object-contain rounded" />
+                <img
+                  src={logoUrl}
+                  alt={content.siteName + ' logo'}
+                  className="w-12 h-12 md:w-14 md:h-14 object-contain rounded"
+                />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
                 </div>
               )}

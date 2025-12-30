@@ -59,7 +59,7 @@ const Services = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid gap-10 md:gap-12 justify-center max-w-6xl mx-auto [grid-template-columns:repeat(auto-fit,minmax(240px,320px))]">
           {cards.map((service, index) => {
             if (loading) {
               return (

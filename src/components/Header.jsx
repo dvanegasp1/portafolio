@@ -64,7 +64,7 @@ export default function Header() {
         isScrolled ? 'glass-effect shadow-2xl' : 'bg-transparent'
       }`}
     >
-      <nav className="container mx-auto px-6 py-4">
+      <nav className="container mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
           <motion.button
             type="button"
@@ -73,9 +73,13 @@ export default function Header() {
             className="flex items-center space-x-2 focus:outline-none"
           >
             {logoUrl ? (
-              <img src={logoUrl} alt={content.siteName + ' logo'} className="w-10 h-10 object-contain rounded" />
+              <img
+                src={logoUrl}
+                alt={content.siteName + ' logo'}
+                className="w-12 h-12 md:w-14 md:h-14 object-contain rounded"
+              />
             ) : (
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
               </div>
             )}
@@ -102,7 +106,7 @@ export default function Header() {
           <div className="hidden lg:block">
             <Button
               onClick={() => handleNavClick('#contact')}
-              className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-900 hover:to-black text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 pulse-glow"
+              className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-900 hover:to-black text-white px-4 py-1.5 rounded-full font-semibold transition-all duration-300 pulse-glow"
             >
               Contacto
             </Button>
@@ -141,4 +145,3 @@ export default function Header() {
     </motion.header>
   );
 }
-
