@@ -1,51 +1,46 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, BarChart3, Brain, Settings, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useContent } from '@/content/ContentContext.jsx';
+import { supabase } from '@/lib/supabaseClient.js';
+import { slugify } from '@/lib/utils.js';
 
 const SkeletonBlock = ({ className }) => (
   <div className={`animate-pulse rounded bg-white/10 ${className}`} />
 );
 
+const resolveStorageUrl = (storagePath) => {
+  if (!storagePath) return null;
+  if (/^(https?:|data:|blob:)/i.test(storagePath)) return storagePath;
+  if (!supabase) return null;
+  const { data } = supabase.storage.from('portfolio-assets').getPublicUrl(storagePath);
+  return data?.publicUrl || null;
+};
+
 export default function Projects() {
   const { content, supa } = useContent();
   const loading = supa.loading;
-  const projects = Array.isArray(content?.projects) ? content.projects : [
-    {
-      title: "Visualización de Cultura Institucional",
-      description: "Dashboard interactivo para medir indicadores de gestión del conocimiento en la Policía Nacional.",
-      icon: "BarChart3",
-      tags: ["Power BI", "Dashboard", "Gestión del Conocimiento"]
-    },
-    {
-      title: "Modelo Predictivo de Riesgos Ocupacionales",
-      description: "Algoritmo en Python para anticipar riesgos laborales y optimizar la seguridad institucional.",
-      icon: "Brain",
-      tags: ["Python", "Machine Learning", "Seguridad Laboral"]
-    },
-    {
-      title: "Pipeline ETL Automatizado",
-      description: "Integración de datos con KNIME y SQL para mantener información actualizada y confiable.",
-      icon: "Settings",
-      tags: ["KNIME", "SQL", "ETL", "Automatización"]
-    },
-    {
-      title: "Artículo: Rutas de Carrera en la Policía Nacional",
-      description: "Investigación publicada en Revista Logos sobre diseño de trayectorias profesionales usando teoría de grafos.",
-      icon: "FileText",
-      tags: ["Investigación", "Teoría de Grafos", "Carrera Profesional"]
-    }
-  ];
+  const blogProjects = (Array.isArray(content?.blogPosts) ? content.blogPosts : [])
+    .filter((p) => p.show_in_projects && p.published)
+    .map((p) => ({
+      title: p.title,
+      description: p.excerpt || p.content_md?.slice(0, 140) || '',
+      icon: 'FileText',
+      cover_image_path: p.cover_image_path || null,
+      tags: Array.isArray(p.tags) ? p.tags : [],
+      link: `#/blog/${encodeURIComponent(p.slug || slugify(p.title || 'post'))}`,
+    }));
+
   const heading = content?.projectsHeading || "Proyectos Destacados" || '';
   const subheading = content?.projectsSubheading || "Soluciones en analítica de datos, automatización y gestión estratégica." || "";
   const badgeText = content?.hero?.badge || "Proyectos" || '';
 
-  if (!loading && projects.length === 0) {
+  if (!loading && blogProjects.length === 0) {
     return null;
   }
 
-  const cards = loading ? new Array(3).fill(null) : projects;
+  const cards = loading ? new Array(3).fill(null) : blogProjects;
 
   return (
     <section id="projects" className="py-20 relative overflow-hidden scroll-mt-24">
@@ -103,7 +98,17 @@ export default function Projects() {
                           {project.icon === 'BarChart3' && <BarChart3 className="w-5 h-5 text-white" />}
                           {project.icon === 'Brain' && <Brain className="w-5 h-5 text-white" />}
                           {project.icon === 'Settings' && <Settings className="w-5 h-5 text-white" />}
-                          {project.icon === 'FileText' && <FileText className="w-5 h-5 text-white" />}
+                          {project.icon === 'FileText' && (
+                            resolveStorageUrl(project.cover_image_path) ? (
+                              <img
+                                src={resolveStorageUrl(project.cover_image_path)}
+                                alt={project.title || 'Portada'}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            ) : (
+                              <FileText className="w-5 h-5 text-white" />
+                            )
+                          )}
                         </div>
                       )}
                       <h3 className="text-xl font-bold text-white">{project.title}</h3>
