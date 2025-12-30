@@ -164,7 +164,7 @@ export default function AdminPanel() {
     if (mode === 'portfolio' && tab === 'blog') setTab('general');
   }, [mode, tab]);
 
-  // (Legacy) save full draft â€“ kept for reference; primary flow uses handleSaveScoped
+  // (Legacy) save full draft ? kept for reference; primary flow uses handleSaveScoped
   const save = () => {
     try {
       setContent(draft);
@@ -172,15 +172,15 @@ export default function AdminPanel() {
         if (session && isAdmin) {
           saveToSupabase(draft).then(({ error }) => {
             if (error) {
-              toast({ title: 'Guardado local', description: 'SincronizaciÃ³n con Supabase fallÃ³: ' + error.message, variant: 'default' });
+              toast({ title: 'Guardado local', description: 'Sincronización con Supabase falló: ' + error.message, variant: 'default' });
             } else {
               toast({ title: 'Guardado', description: 'Cambios aplicados y sincronizados con Supabase.' });
             }
           });
         } else if (session && !isAdmin) {
-          toast({ title: 'Guardado local', description: 'Tu sesiÃ³n no pertenece al grupo Admin. Pide acceso para sincronizar.', variant: 'default' });
+          toast({ title: 'Guardado local', description: 'Tu sesión no pertenece al grupo Admin. Pide acceso para sincronizar.', variant: 'default' });
         } else {
-          toast({ title: 'Guardado local', description: 'Inicia sesiÃ³n para sincronizar con Supabase.', variant: 'default' });
+          toast({ title: 'Guardado local', description: 'Inicia sesión para sincronizar con Supabase.', variant: 'default' });
         }
       } else {
         toast({ title: 'Guardado', description: 'Cambios aplicados localmente.' });
@@ -221,9 +221,9 @@ export default function AdminPanel() {
         const scopes = scopesByTab[tab] || ['all'];
         const { error } = await saveToSupabase(payload, scopes);
         if (error) {
-          toast({ title: 'Sync parcial fall?', description: error.message || String(error), variant: 'destructive' });
+          toast({ title: 'Sincronización parcial falló', description: error.message || String(error), variant: 'destructive' });
         } else {
-          toast({ title: 'Guardado', description: 'Se guard? solo la secci?n actual.' });
+          toast({ title: 'Guardado', description: 'Se guardó solo la sección actual.' });
         }
       }
     } catch (e) {
@@ -253,7 +253,7 @@ export default function AdminPanel() {
     const errors = [];
     let next = draft;
     try {
-      // Upload logo first so it?s available in the same save
+      // Upload logo first so it's available in the same save
       if (logoFile) {
         let setLocalUrl = false;
         if (supabase) {
@@ -262,7 +262,7 @@ export default function AdminPanel() {
           if (upErr) {
             setLocalUrl = true;
             errors.push(upErr.message || 'No se pudo subir logo a Supabase');
-            toast({ title: 'No se pudo subir a Supabase', description: upErr.message + '. Se usar?a vista local temporal.', variant: 'default' });
+            toast({ title: 'No se pudo subir a Supabase', description: upErr.message + '. Se usaría vista local temporal.', variant: 'default' });
           } else {
             next = { ...next, branding: { ...(next.branding||{}), logo_path: key } };
             setDraft(next);
@@ -403,7 +403,7 @@ export default function AdminPanel() {
             const key = `education/logos/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
             const { error: upErr } = await supabase.storage.from('portfolio-assets').upload(key, file, { upsert: true });
             if (upErr) {
-              errors.push(upErr.message || 'No se pudo subir logo de educaciÃ³n');
+              errors.push(upErr.message || 'No se pudo subir logo de educación');
               toast({ title: 'Error subiendo logo', description: upErr.message, variant: 'destructive' });
             } else {
               const educationSafe = Array.isArray(next.education) ? next.education : [];
@@ -495,7 +495,7 @@ export default function AdminPanel() {
               </div>
 
               <button onClick={() => setTab('experience')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='experience'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Experiencia</button>
-                <button onClick={() => setTab('education')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='education'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>EducaciÃ³n</button>
+                <button onClick={() => setTab('education')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='education'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Educación</button>
                 <button onClick={() => setTab('contact')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='contact'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Contacto</button>
                     <button onClick={() => setTab('testimonials')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='testimonials'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>Testimonios</button>
                     <button onClick={() => setTab('general')} className={`block w-full text-left px-3 py-2 rounded mb-1 ${tab==='general'? 'bg-blue-600/30 text-white' : 'text-gray-300 hover:bg-white/10'}`}>General</button>
@@ -512,7 +512,7 @@ export default function AdminPanel() {
               <div className="mt-6 p-3 rounded bg-white/5 border border-white/10">
                 <div className="text-xs text-gray-400 mb-2">Supabase</div>
                 {!supabase && (
-                  <div className="text-xs text-gray-400">No configurado. AÃ±ade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.</div>
+                  <div className="text-xs text-gray-400">No configurado. Añade VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.</div>
                 )}
                 {supabase && !session && (
                   <div className="space-y-2">
@@ -531,7 +531,7 @@ export default function AdminPanel() {
                       }
                     }} className="w-full bg-blue-600 text-white">Enviar Magic Link</Button>
                     {magicSentTo && (
-                      <div className="text-[11px] text-gray-400">DespuÃ©s de abrir el enlace desde tu correo, regresarÃ¡s aquÃ­ automÃ¡ticamente.</div>
+                      <div className="text-[11px] text-gray-400">Después de abrir el enlace desde tu correo, regresarás aquí automáticamente.</div>
                     )}
                   </div>
                 )}
@@ -544,7 +544,7 @@ export default function AdminPanel() {
                       </span>
                     </div>
                     <div className="text-[11px] text-gray-400 mt-1">Solo usuarios Admin pueden sincronizar con Supabase.</div>
-                    <Button onClick={async()=>{ await supabase.auth.signOut(); }} variant="outline" className="w-full mt-2">Sign Out</Button>
+                    <Button onClick={async()=>{ await supabase.auth.signOut(); }} variant="outline" className="w-full mt-2">Cerrar sesión</Button>
                   </div>
                 )}
               </div>
@@ -552,16 +552,16 @@ export default function AdminPanel() {
 
             {/* Content */}
             <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Admin â€” Portfolio Settings</h2>
+              <h2 className="text-2xl font-bold mb-4">Admin — Configuración del portafolio</h2>
 
               {tab === 'hero' && (
                 <div className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <Field label="TÃ­tulo Principal">
+                      <Field label="Título Principal">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.title} onChange={(e)=>onChange('hero.title', e.target.value)} />
                       </Field>
-                      <Field label="SubtÃ­tulo">
+                      <Field label="Subtítulo">
                         <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.subtitle} onChange={(e)=>onChange('hero.subtitle', e.target.value)} />
                       </Field>
                       <Field label="Badge">
@@ -589,20 +589,20 @@ export default function AdminPanel() {
                   </div>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="text-lg font-semibold mb-3">BotÃ³n Primario</h4>
-                      <Field label="Texto del BotÃ³n">
+                      <h4 className="text-lg font-semibold mb-3">Botón Primario</h4>
+                      <Field label="Texto del Botón">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.primaryCta.label} onChange={(e)=>onChange('hero.primaryCta.label', e.target.value)} />
                       </Field>
-                      <Field label="Enlace del BotÃ³n">
+                      <Field label="Enlace del Botón">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.primaryCta.href} onChange={(e)=>onChange('hero.primaryCta.href', e.target.value)} />
                       </Field>
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold mb-3">BotÃ³n Secundario</h4>
-                      <Field label="Texto del BotÃ³n">
+                      <h4 className="text-lg font-semibold mb-3">Botón Secundario</h4>
+                      <Field label="Texto del Botón">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.label} onChange={(e)=>onChange('hero.secondaryCta.label', e.target.value)} />
                       </Field>
-                      <Field label="Enlace del BotÃ³n">
+                      <Field label="Enlace del Botón">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.hero.secondaryCta.href} onChange={(e)=>onChange('hero.secondaryCta.href', e.target.value)} />
                       </Field>
                     </div>
@@ -624,7 +624,7 @@ export default function AdminPanel() {
                       </Button>
                     </div>
                     {heroHighlights.length === 0 && (
-                      <p className="text-sm text-gray-400 mb-4">AÃ±ade hasta dos tarjetas para mostrarlas sobre la imagen del hero.</p>
+                      <p className="text-sm text-gray-400 mb-4">Añade hasta dos tarjetas para mostrarlas sobre la imagen del hero.</p>
                     )}
                     <div className="space-y-4">
                       {heroHighlights.map((w, i) => (
@@ -636,11 +636,11 @@ export default function AdminPanel() {
                                 {['Users','Target'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
                               </select>
                             </Field>
-                            <Field label="TÃ­tulo">
+                            <Field label="Título">
                               <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.title}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=Array.isArray(d.whyUs)?[...d.whyUs]:[]; arr[i]={...(arr[i]||{}), title:v}; return {...d, whyUs:arr};}); }} />
                             </Field>
-                            <Field label="SubtÃ­tulo">
+                            <Field label="Subtítulo">
                               <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={w.subtitle}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=Array.isArray(d.whyUs)?[...d.whyUs]:[]; arr[i]={...(arr[i]||{}), subtitle:v}; return {...d, whyUs:arr};}); }} />
                             </Field>
@@ -659,10 +659,10 @@ export default function AdminPanel() {
                 <div className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <Field label="TÃ­tulo de la SecciÃ³n">
+                      <Field label="Título de la Sección">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.about.heading} onChange={(e)=>onChange('about.heading', e.target.value)} />
                       </Field>
-                      <Field label="Texto de PresentaciÃ³n">
+                      <Field label="Texto de Presentación">
                         <textarea rows={8} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.about.description} onChange={(e)=>onChange('about.description', e.target.value)} />
                       </Field>
                     </div>
@@ -746,17 +746,17 @@ export default function AdminPanel() {
                             <div className="p-4 space-y-4 border-t border-white/10">
                               <div className="grid md:grid-cols-2 gap-4">
                                 <div>
-                                  <Field label="TÃ­tulo del Servicio">
+                                  <Field label="Título del Servicio">
                                     <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.title}
                                       onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[idx]={...arr[idx], title:v}; return {...d, services:arr};}); }} />
                                   </Field>
-                                  <Field label="DescripciÃ³n">
+                                  <Field label="Descripción">
                                     <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={svc.description}
                                       onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.services]; arr[idx]={...arr[idx], description:v}; return {...d, services:arr};}); }} />
                                   </Field>
                                 </div>
                                 <div>
-                                  <Field label="Ãcono">
+                                  <Field label="Ícono">
                                     <select className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
                                       value={svc.icon}
                                       onChange={(e)=>{
@@ -765,7 +765,7 @@ export default function AdminPanel() {
                                       {['BarChart3','Database','LineChart','Workflow','Zap','Shield','Brain','Settings'].map(opt=> <option key={opt} value={opt}>{opt}</option>)}
                                     </select>
                                   </Field>
-                                  <Field label="Imagen de Ã­cono (opcional, sube para reemplazar)">
+                                  <Field label="Imagen de ícono (opcional, sube para reemplazar)">
                                     <input type="file" accept="image/*" className="w-full text-sm" onChange={(e)=> setServiceFiles(prev=> ({...prev, [idx]: e.target.files?.[0]||null}))} />
                                     {svc.icon_path && <div className="text-[11px] text-gray-400 mt-1">Actual: {svc.icon_path}</div>}
                                     {resolveStorageUrl(svc.icon_path) ? (
@@ -807,29 +807,29 @@ export default function AdminPanel() {
                               <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.role || ''}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], role:v}; return {...d, experience:arr};}); }} />
                             </Field>
-                            <Field label="UbicaciÃ³n">
+                            <Field label="Ubicación">
                               <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.location || ''}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], location:v}; return {...d, experience:arr};}); }} />
                             </Field>
                           </div>
                           <div>
                             <div className="grid md:grid-cols-2 gap-3">
-                              <Field label="AÃ±o inicio">
+                              <Field label="Año inicio">
                                 <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.start || ''}
                                   onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], start:v}; return {...d, experience:arr};}); }} />
                               </Field>
-                              <Field label="AÃ±o fin">
+                              <Field label="Año fin">
                                 <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.end || ''}
                                   onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], end:v}; return {...d, experience:arr};}); }} />
                               </Field>
                             </div>
-                            <Field label="DescripciÃ³n">
+                            <Field label="Descripción">
                               <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.description || ''}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], description:v}; return {...d, experience:arr};}); }} />
                             </Field>
                           </div>
                         </div>
-                        <Field label="Logros (uno por lÃ­nea)">
+                        <Field label="Logros (uno por línea)">
                           <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(item.achievements || []).join('\n')}
                             onChange={(e)=>{ const lines=e.target.value.split('\n').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...(d.experience||[])]; arr[i]={...arr[i], achievements:lines}; return {...d, experience:arr};}); }} />
                         </Field>
@@ -851,13 +851,13 @@ export default function AdminPanel() {
 
               {tab === 'education' && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">EducaciÃ³n</h3>
+                  <h3 className="text-lg font-semibold mb-4">Educación</h3>
                   <div className="space-y-4">
                     {sortResumeEntries(draft.education).map(({ entry: item, idx: i }) => (
                       <div key={`${item.institution || 'edu'}-${i}`} className="glass-effect rounded-xl p-4 border border-white/10">
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <Field label="InstituciÃ³n">
+                            <Field label="Institución">
                               <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.institution || ''}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], institution:v}; return {...d, education:arr};}); }} />
                             </Field>
@@ -865,29 +865,29 @@ export default function AdminPanel() {
                               <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.program || ''}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], program:v}; return {...d, education:arr};}); }} />
                             </Field>
-                            <Field label="UbicaciÃ³n">
+                            <Field label="Ubicación">
                               <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.location || ''}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], location:v}; return {...d, education:arr};}); }} />
                             </Field>
                           </div>
                           <div>
                             <div className="grid md:grid-cols-2 gap-3">
-                              <Field label="AÃ±o inicio">
+                              <Field label="Año inicio">
                                 <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.start || ''}
                                   onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], start:v}; return {...d, education:arr};}); }} />
                               </Field>
-                              <Field label="AÃ±o fin">
+                              <Field label="Año fin">
                                 <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.end || ''}
                                   onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], end:v}; return {...d, education:arr};}); }} />
                               </Field>
                             </div>
-                            <Field label="DescripciÃ³n">
+                            <Field label="Descripción">
                               <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={item.description || ''}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], description:v}; return {...d, education:arr};}); }} />
                             </Field>
                           </div>
                         </div>
-                        <Field label="Logros (uno por lÃ­nea)">
+                        <Field label="Logros (uno por línea)">
                           <textarea rows={3} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={(item.achievements || []).join('\n')}
                             onChange={(e)=>{ const lines=e.target.value.split('\n').map(s=>s.trim()).filter(Boolean); setDraft(d=>{ const arr=[...(d.education||[])]; arr[i]={...arr[i], achievements:lines}; return {...d, education:arr};}); }} />
                         </Field>
@@ -905,13 +905,13 @@ export default function AdminPanel() {
                           )}
                         </Field>
                         <div className="text-right">
-                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, education:(d.education||[]).filter((_,idx)=>idx!==i) }))}>Eliminar EducaciÃ³n</Button>
+                          <Button variant="outline" onClick={()=> setDraft(d=>({ ...d, education:(d.education||[]).filter((_,idx)=>idx!==i) }))}>Eliminar Educación</Button>
                         </div>
                       </div>
                     ))}
                   </div>
                   <div className="mt-3">
-                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, education:[...(d.education||[]), { institution:'', program:'', location:'', start:'', end:'', description:'', achievements:[], icon_path:null }] }))}>Agregar EducaciÃ³n</Button>
+                    <Button variant="ghost" onClick={()=> setDraft(d=>({ ...d, education:[...(d.education||[]), { institution:'', program:'', location:'', start:'', end:'', description:'', achievements:[], icon_path:null }] }))}>Agregar Educación</Button>
                   </div>
                 </div>
               )}
@@ -924,7 +924,7 @@ export default function AdminPanel() {
                     </div>
                     {blogPosts.length === 0 && (
                       <div className="text-sm text-gray-300 bg-white/5 border border-white/10 rounded-xl p-4">
-                        AÃºn no hay posts. Usa â€œAgregar postâ€ para crear el primero.
+                        Aún no hay posts. Usa "Agregar post" para crear el primero.
                       </div>
                     )}
                     {blogPosts.map((post, i) => {
@@ -987,7 +987,7 @@ export default function AdminPanel() {
                             </div>
 
                           <div className="grid md:grid-cols-2 gap-4">
-                            <Field label="TÃ­tulo">
+                            <Field label="Título">
                               <input
                                 className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
                                 value={post.title || ''}
@@ -1080,7 +1080,7 @@ export default function AdminPanel() {
                                 className="w-full bg-transparent border border-white/20 rounded px-3 py-2"
                                 value={post.cover_alt || ''}
                                 onChange={(e)=> updatePost(i, { cover_alt: e.target.value })}
-                                placeholder="DescripciÃ³n de la imagen"
+                                placeholder="Descripción de la imagen"
                               />
                             </Field>
                           </div>
@@ -1182,10 +1182,10 @@ export default function AdminPanel() {
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Testimonios</h3>
                   <div className="grid md:grid-cols-2 gap-6 mb-4">
-                    <Field label="TÃ­tulo de la SecciÃ³n">
+                    <Field label="Título de la Sección">
                       <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.testimonialsHeading || ''} onChange={(e)=>onChange('testimonialsHeading', e.target.value)} />
                     </Field>
-                    <Field label="SubtÃ­tulo">
+                    <Field label="Subtítulo">
                       <textarea rows={2} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.testimonialsSubheading || ''} onChange={(e)=>onChange('testimonialsSubheading', e.target.value)} />
                     </Field>
                   </div>
@@ -1198,7 +1198,7 @@ export default function AdminPanel() {
                               <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={testimonial.name || ''}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.testimonials]; arr[i]={...arr[i], name:v}; return {...d, testimonials:arr};}); }} />
                             </Field>
-                            <Field label="PosiciÃ³n">
+                            <Field label="Posición">
                               <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={testimonial.position || ''}
                                 onChange={(e)=>{ const v=e.target.value; setDraft(d=>{ const arr=[...d.testimonials]; arr[i]={...arr[i], position:v}; return {...d, testimonials:arr};}); }} />
                             </Field>
@@ -1246,21 +1246,21 @@ export default function AdminPanel() {
                 <div className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <Field label="TÃ­tulo de la SecciÃ³n">
+                      <Field label="Título de la Sección">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contactHeading||''} onChange={(e)=>onChange('contactHeading', e.target.value)} />
                       </Field>
                       <Field label="Email de Contacto">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} />
                       </Field>
-                      <Field label="TelÃ©fono">
+                      <Field label="Teléfono">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.phone||''} onChange={(e)=>onChange('contact.phone', e.target.value)} />
                       </Field>
-                      <Field label="UbicaciÃ³n">
+                      <Field label="Ubicación">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} />
                       </Field>
                     </div>
                     <div>
-                      <Field label="Horario de AtenciÃ³n">
+                      <Field label="Horario de Atención">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.hours||''} onChange={(e)=>onChange('contact.hours', e.target.value)} />
                       </Field>
                       <Field label="Nota Descriptiva">
@@ -1283,21 +1283,21 @@ export default function AdminPanel() {
                       <Field label="Placeholder Empresa">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.placeholders?.company || 'Nombre de tu empresa'} onChange={(e)=>onChange('contact.placeholders.company', e.target.value)} />
                       </Field>
-                      <Field label="Placeholder TelÃ©fono">
+                      <Field label="Placeholder Teléfono">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.placeholders?.phone || '+57 300 123 4567'} onChange={(e)=>onChange('contact.placeholders.phone', e.target.value)} />
                       </Field>
                       <Field label="Placeholder Mensaje">
-                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.placeholders?.message || 'CuÃ©ntame cÃ³mo puedo ayudarte'} onChange={(e)=>onChange('contact.placeholders.message', e.target.value)} />
+                        <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.placeholders?.message || 'Cuéntame cómo puedo ayudarte'} onChange={(e)=>onChange('contact.placeholders.message', e.target.value)} />
                       </Field>
                     </div>
                   </div>
                   <div>
                     <h4 className="text-lg font-semibold mb-3">Botones del Formulario</h4>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <Field label="Texto BotÃ³n Enviar">
+                      <Field label="Texto Botón Enviar">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.buttons?.submit || 'Enviar Mensaje'} onChange={(e)=>onChange('contact.buttons.submit', e.target.value)} />
                       </Field>
-                      <Field label="Texto BotÃ³n Agendar">
+                      <Field label="Texto Botón Agendar">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.buttons?.schedule || 'Agendar Llamada'} onChange={(e)=>onChange('contact.buttons.schedule', e.target.value)} />
                       </Field>
                     </div>
@@ -1314,10 +1314,10 @@ export default function AdminPanel() {
                     <Field label="Role">
                       <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.role} onChange={(e)=>onChange('role', e.target.value)} />
                     </Field>
-                    <Field label="Contact Email">
+                    <Field label="Email de contacto">
                       <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} />
                     </Field>
-                    <Field label="Location">
+                    <Field label="Ubicación">
                       <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} />
                     </Field>
                   </div>
@@ -1390,7 +1390,7 @@ export default function AdminPanel() {
                           )}
                         </div>
                       )}
-                      <div className="text-[11px] text-gray-500 mt-1">Si no estÃ¡s autenticado como admin, se mostrarÃ¡ una vista local temporal que no persiste tras recargar.</div>
+                      <div className="text-[11px] text-gray-500 mt-1">Si no estás autenticado como admin, se mostrará una vista local temporal que no persiste tras recargar.</div>
                     </Field>
                     <Field label="Logo URL (opcional)">
                       <input
@@ -1399,7 +1399,7 @@ export default function AdminPanel() {
                         value={draft.branding?.logo_path || ''}
                         onChange={(e)=> setDraft(d=> ({...d, branding: { ...(d.branding||{}), logo_path: e.target.value || null }}))}
                       />
-                      <div className="text-[11px] text-gray-500 mt-1">TambiÃ©n puedes pegar un enlace directo al logo. Guardar lo sincroniza si estÃ¡s en Admin.</div>
+                      <div className="text-[11px] text-gray-500 mt-1">También puedes pegar un enlace directo al logo. Guardar lo sincroniza si estás en Admin.</div>
                     </Field>
                     <div className="flex gap-2">
                       <Button variant="outline" onClick={()=> setDraft(d=> ({...d, branding: { ...(d.branding||{}), logo_path: null }}))}>Quitar logo</Button>
@@ -1422,17 +1422,17 @@ export default function AdminPanel() {
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-lg font-semibold mb-3">Texto Principal</h4>
-                    <Field label="DescripciÃ³n del Footer">
-                      <textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.description || 'AnalÃ­tica de datos para decisiones estratÃ©gicas: informaciÃ³n confiable, dashboards claros y resultados medibles.'} onChange={(e)=>onChange('footer.description', e.target.value)} />
+                    <Field label="Descripción del Footer">
+                      <textarea rows={4} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.description || 'Analítica de datos para decisiones estratégicas: información confiable, dashboards claros y resultados medibles.'} onChange={(e)=>onChange('footer.description', e.target.value)} />
                     </Field>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold mb-3">Links de NavegaciÃ³n</h4>
+                    <h4 className="text-lg font-semibold mb-3">Links de Navegación</h4>
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <h5 className="text-sm font-medium text-gray-300 mb-2">Empresa</h5>
                         <Field label="Link 1">
-                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[0]?.label || 'Sobre mÃ­'} onChange={(e)=>onChange('footer.company.0.label', e.target.value)} />
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[0]?.label || 'Sobre m?'} onChange={(e)=>onChange('footer.company.0.label', e.target.value)} />
                         </Field>
                         <Field label="Enlace 1">
                           <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.company?.[0]?.href || '#/about'} onChange={(e)=>onChange('footer.company.0.href', e.target.value)} />
@@ -1453,7 +1453,7 @@ export default function AdminPanel() {
                       <div>
                         <h5 className="text-sm font-medium text-gray-300 mb-2">Recursos</h5>
                         <Field label="Link 1">
-                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.resources?.[0]?.label || 'ArtÃ­culos'} onChange={(e)=>onChange('footer.resources.0.label', e.target.value)} />
+                          <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.resources?.[0]?.label || 'Artículos'} onChange={(e)=>onChange('footer.resources.0.label', e.target.value)} />
                         </Field>
                         <Field label="Enlace 1">
                           <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.resources?.[0]?.href || '#/articles'} onChange={(e)=>onChange('footer.resources.0.href', e.target.value)} />
@@ -1488,12 +1488,12 @@ export default function AdminPanel() {
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold mb-3">SuscripciÃ³n al Newsletter</h4>
+                    <h4 className="text-lg font-semibold mb-3">Suscripción al Newsletter</h4>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <Field label="Texto de la SuscripciÃ³n">
-                        <textarea rows={2} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.newsletter?.description || 'Recibe ideas y recursos exclusivos sobre analÃ­tica directamente en tu correo.'} onChange={(e)=>onChange('footer.newsletter.description', e.target.value)} />
+                      <Field label="Texto de la Suscripción">
+                        <textarea rows={2} className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.newsletter?.description || 'Recibe ideas y recursos exclusivos sobre analítica directamente en tu correo.'} onChange={(e)=>onChange('footer.newsletter.description', e.target.value)} />
                       </Field>
-                      <Field label="Texto del BotÃ³n">
+                      <Field label="Texto del Botón">
                         <input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.footer?.newsletter?.buttonText || 'Quiero recibir novedades'} onChange={(e)=>onChange('footer.newsletter.buttonText', e.target.value)} />
                       </Field>
                     </div>
@@ -1503,18 +1503,18 @@ export default function AdminPanel() {
 
               {tab === 'visibility' && (
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.services} onChange={(e)=>onChange('visibility.services', e.target.checked)} /> <span>Show Services</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.projects} onChange={(e)=>onChange('visibility.projects', e.target.checked)} /> <span>Show Projects</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.testimonials} onChange={(e)=>onChange('visibility.testimonials', e.target.checked)} /> <span>Show Testimonials</span></label>
-                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.resume} onChange={(e)=>onChange('visibility.resume', e.target.checked)} /> <span>Show Resume</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.services} onChange={(e)=>onChange('visibility.services', e.target.checked)} /> <span>Mostrar servicios</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.projects} onChange={(e)=>onChange('visibility.projects', e.target.checked)} /> <span>Mostrar proyectos</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.testimonials} onChange={(e)=>onChange('visibility.testimonials', e.target.checked)} /> <span>Mostrar testimonios</span></label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={draft.visibility.resume} onChange={(e)=>onChange('visibility.resume', e.target.checked)} /> <span>Mostrar experiencia y educación</span></label>
                 </div>
               )}
 
               {tab === 'contact' && (
                 <div className="grid md:grid-cols-2 gap-6">
-                  <Field label="Contact Email"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} /></Field>
-                  <Field label="Location"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} /></Field>
-                  <Field label="Schedule URL (Calendly, etc.)"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.scheduleUrl||''} onChange={(e)=>onChange('contact.scheduleUrl', e.target.value)} placeholder="https://calendly.com/usuario/llamada" /></Field>
+                  <Field label="Email de contacto"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.email||''} onChange={(e)=>onChange('contact.email', e.target.value)} /></Field>
+                  <Field label="Ubicación"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.location||''} onChange={(e)=>onChange('contact.location', e.target.value)} /></Field>
+                  <Field label="URL de agendamiento (Calendly, etc.)"><input className="w-full bg-transparent border border-white/20 rounded px-3 py-2" value={draft.contact?.scheduleUrl||''} onChange={(e)=>onChange('contact.scheduleUrl', e.target.value)} placeholder="https://calendly.com/usuario/llamada" /></Field>
                 </div>
               )}
 
@@ -1525,17 +1525,17 @@ export default function AdminPanel() {
                     disabled={isSaving}
                     className="bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSaving ? 'Saving...' : 'Save'}
+                    {isSaving ? 'Guardando...' : 'Guardar'}
                   </Button>
-                  <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
-                  <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
+                  <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Restablecer</Button>
+                  <a href="#" className="ml-auto"><Button variant="ghost">Salir del Admin</Button></a>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <p className="text-xs text-gray-400 mt-4">Tip: Open admin anytime by adding #admin to the URL. {supa.loading ? 'Syncing with Supabase...' : ''} {supa.error ? `(Supabase error: ${supa.error})` : ''}</p>
+        <p className="text-xs text-gray-400 mt-4">Tip: abre el panel admin en cualquier momento agregando #admin a la URL. {supa.loading ? 'Sincronizando con Supabase...' : ''} {supa.error ? `(Error de Supabase: ${supa.error})` : ''}</p>
       </div>
     </div>
   );
