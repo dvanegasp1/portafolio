@@ -59,13 +59,13 @@ const Services = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="flex flex-wrap justify-center gap-16">
           {cards.map((service, index) => {
             if (loading) {
               return (
                 <motion.div
                   key={index}
-                  className="glass-effect rounded-2xl p-6 h-64 border border-white/10"
+                  className="glass-effect rounded-2xl p-6 h-64 w-64 text-center border border-white/10"
                   initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: index * 0.05 }}
@@ -90,7 +90,7 @@ const Services = () => {
 
             const Icon = iconMap[service.icon] || BarChart3;
             const iconWrapperClasses = [
-              'w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110',
+              'w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110',
               thumbnail ? 'overflow-hidden bg-white/5 border border-white/10 shadow-inner' : 'bg-gradient-to-r from-purple-500 to-pink-500'
             ].join(' ');
 
