@@ -83,11 +83,7 @@ function AppInner() {
         <meta name="description" content={seoDescription} />
       </Helmet>
       {isAdmin && <AdminPanel />}
-<<<<<<< HEAD
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-rose-900">
-=======
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
->>>>>>> dev
         <Header />
         {route === 'home' && (
           <>
@@ -158,5 +154,4 @@ export default function App() {
     </ContentProvider>
   );
 }
-
 

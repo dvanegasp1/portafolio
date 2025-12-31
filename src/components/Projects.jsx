@@ -52,17 +52,11 @@ export default function Projects() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-<<<<<<< HEAD
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600/20 to-rose-600/20 rounded-full border border-red-500/30 mb-6">
-            <span className="text-sm font-medium text-red-300">Projects</span>
-          </div>
-=======
           {(loading || badgeText) && (
             <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full border border-blue-500/30 mb-6">
               {loading ? <SkeletonBlock className="h-4 w-24 mx-auto" /> : <span className="text-sm font-medium text-blue-300">{badgeText}</span>}
             </div>
           )}
->>>>>>> dev
 
           <h2 className="text-4xl lg:text-6xl font-bold mb-6">
             {loading ? <SkeletonBlock className="h-10 w-2/3 mx-auto" /> : heading}
@@ -84,25 +78,6 @@ export default function Projects() {
               whileHover={{ y: -8 }}
               className="group"
             >
-<<<<<<< HEAD
-              <div className="glass-effect rounded-2xl p-6 h-full border border-white/10 hover:border-white/20 transition-all">
-                <h3 className="text-2xl font-bold text-white mb-3">{p.title}</h3>
-                <p className="text-gray-300 mb-4">{p.description}</p>
-                <div className="mb-6">
-                  {p.tags?.map((t) => (
-                    <span key={t} className="text-xs text-red-300 bg-red-500/10 rounded-full px-3 py-1 inline-block mr-2 mb-2">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-                {p.link && (
-                  <Button asChild variant="ghost" className="text-red-300 hover:text-white hover:bg-red-600/20">
-                    <a href={p.link}>
-                      Learn More
-                      <ArrowRight className="ml-2 w-4 h-4 inline" />
-                    </a>
-                  </Button>
-=======
               <div className="glass-effect rounded-2xl p-6 h-full border border-white/10 hover:border-white/20 hover:shadow-2xl hover:bg-white/5 transition-all duration-300">
                 {loading ? (
                   <>
@@ -155,7 +130,6 @@ export default function Projects() {
                       </Button>
                     )}
                   </>
->>>>>>> dev
                 )}
               </div>
             </motion.div>

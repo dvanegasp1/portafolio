@@ -130,46 +130,24 @@ export default function Hero() {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pb-16 md:pb-24">
       <div className="absolute inset-0">
-<<<<<<< HEAD
-        <div className="absolute top-20 left-10 w-72 h-72 bg-red-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating-animation" />
-        <div className="absolute top-40 right-10 w-72 h-72 bg-rose-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating-animation" style={{ animationDelay: '2s' }} />
-=======
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating-animation" />
         <div className="absolute top-40 right-10 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating-animation" style={{ animationDelay: '2s' }} />
->>>>>>> dev
         <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating-animation" style={{ animationDelay: '4s' }} />
       </div>
 
       <div className="container mx-auto px-6 py-20 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-<<<<<<< HEAD
-<<<<<<< HEAD
-          {/* Left content */}
-          <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="text-center lg:text-left">
-            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600/20 to-rose-600/20 rounded-full border border-red-500/30 mb-6">
-              <span className="text-sm font-medium text-red-300">Consultoría de Élite</span>
-=======
-          {/* Left content wired to Supabase */}
-=======
->>>>>>> dev
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             className="text-center lg:text-left"
           >
-<<<<<<< HEAD
-            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
-              <span className="text-sm font-medium text-purple-300">{badge}</span>
->>>>>>> 969f6a781e360e4ed7de766738a40b3ac50fb5d0
-            </div>
-=======
             {(loading || badge) && (
               <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full border border-blue-500/30 mb-6">
                 {loading ? <SkeletonBlock className="h-4 w-24" /> : <span className="text-sm font-medium text-blue-300">{badge}</span>}
               </div>
             )}
->>>>>>> dev
 
             <h1 className="font-bold mb-6 leading-tight">
               {loading ? (
@@ -193,27 +171,6 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-<<<<<<< HEAD
-<<<<<<< HEAD
-              <Button onClick={() => scrollTo('#projects')} size="lg" className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-8 py-4 rounded-full font-semibold text-lg pulse-glow group">
-                Ver Proyectos
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button onClick={() => scrollTo('#about')} variant="outline" size="lg" className="border-2 border-red-500 text-red-300 hover:bg-red-500/10 px-8 py-4 rounded-full font-semibold text-lg">
-                Conocer Más
-=======
-              <Button onClick={() => scrollTo(primaryHref)} size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-full font-semibold text-lg pulse-glow group">
-                {primaryLabel}
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button onClick={() => scrollTo(secondaryHref)} variant="outline" size="lg" className="border-2 border-purple-500 text-purple-300 hover:bg-purple-500/10 px-8 py-4 rounded-full font-semibold text-lg">
-                {secondaryLabel}
->>>>>>> 969f6a781e360e4ed7de766738a40b3ac50fb5d0
-              </Button>
-            </div>
-
-            <div className="mt-12 pt-8 border-t border-red-500/30" />
-=======
               {loading ? (
                 <>
                   <SkeletonBlock className="h-50 w-40" />
@@ -237,45 +194,9 @@ export default function Hero() {
             </div>
 
             <div className="mt-12 pt-8 border-t border-blue-500/30" />
->>>>>>> dev
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="relative">
-<<<<<<< HEAD
-            <img className="w-full h-auto rounded-2xl shadow-2xl" alt="Hero" src={heroImage} />
-            {/* Top-left overlay */}
-            {(() => { const Icon = iconMap[content.whyUs?.[0]?.icon] || Users; return (
-            <div className="absolute -top-6 -left-6 w-64">
-              <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center mr-3">
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-white font-semibold leading-tight">{content.whyUs?.[0]?.title || 'Equipo Experto'}</div>
-                    <div className="text-gray-300 text-sm">{content.whyUs?.[0]?.subtitle || 'Consultores Certificados'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            ); })()}
-            {/* Bottom-right overlay */}
-            {(() => { const Icon = iconMap[content.whyUs?.[1]?.icon] || Target; return (
-            <div className="absolute -bottom-6 -right-6 w-72">
-              <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 flex items-center justify-center mr-3">
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-white font-semibold leading-tight">{content.whyUs?.[1]?.title || 'Resultados Garantizados'}</div>
-                    <div className="text-gray-300 text-sm">{content.whyUs?.[1]?.subtitle || 'ROI Comprobado'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            ); })()}
-=======
             {heroImage ? (
               <img className="w-full h-auto rounded-2xl shadow-2xl object-cover" alt="Imagen principal del sitio" src={heroImage} />
             ) : (
@@ -283,7 +204,6 @@ export default function Hero() {
             )}
             {renderWhyCard(highlightCards[0], Users, '-top-6 -left-6')}
             {renderWhyCard(highlightCards[1], Target, '-bottom-6 -right-6')}
->>>>>>> dev
           </motion.div>
         </div>
       </div>

@@ -66,12 +66,6 @@ export default function Header() {
     >
       <nav className="container mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
-<<<<<<< HEAD
-          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-rose-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
-            </div>
-=======
           <motion.button
             type="button"
             onClick={() => handleNavClick('#home')}
@@ -89,7 +83,6 @@ export default function Header() {
                 <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
               </div>
             )}
->>>>>>> dev
             <span className="text-2xl font-bold gradient-text">{content.siteName}</span>
           </motion.button>
 
@@ -103,11 +96,7 @@ export default function Header() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.08 }}
-<<<<<<< HEAD
-                className="text-white hover:text-red-300 transition-colors duration-300 font-medium"
-=======
                 className="text-white hover:text-blue-300 transition-colors duration-300 font-medium"
->>>>>>> dev
               >
                 {item.name}
               </motion.button>
@@ -115,16 +104,12 @@ export default function Header() {
           </div>
 
           <div className="hidden lg:block">
-            <Button
-              onClick={() => handleNavClick('#contact')}
-<<<<<<< HEAD
-              className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 pulse-glow"
-=======
-              className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-900 hover:to-black text-white px-4 py-1.5 rounded-full font-semibold transition-all duration-300 pulse-glow"
->>>>>>> dev
-            >
-              Contacto
-            </Button>
+              <Button
+                onClick={() => handleNavClick('#contact')}
+                className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-900 hover:to-black text-white px-4 py-1.5 rounded-full font-semibold transition-all duration-300 pulse-glow"
+              >
+                Contacto
+              </Button>
           </div>
 
           <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="lg:hidden text-white p-2">
@@ -143,22 +128,14 @@ export default function Header() {
               <button
                 key={item.name}
                 onClick={() => handleNavClick(item.href)}
-<<<<<<< HEAD
-                className="block w-full text-left py-3 text-white hover:text-red-300 transition-colors duration-300"
-=======
                 className="block w-full text-left py-3 text-white hover:text-blue-300 transition-colors duration-300"
->>>>>>> dev
               >
                 {item.name}
               </button>
             ))}
             <Button
               onClick={() => handleNavClick('#contact')}
-<<<<<<< HEAD
-              className="w-full mt-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white py-2 rounded-full font-semibold"
-=======
               className="w-full mt-4 bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-900 hover:to-black text-white py-2 rounded-full font-semibold"
->>>>>>> dev
             >
               Contacto
             </Button>

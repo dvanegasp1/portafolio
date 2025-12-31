@@ -1531,19 +1531,6 @@ export default function AdminPanel() {
                   <a href="#" className="ml-auto"><Button variant="ghost">Salir del Admin</Button></a>
                 </div>
               )}
-<<<<<<< HEAD
-
-              <div className="flex gap-3 mt-6">
-<<<<<<< HEAD
-                <Button onClick={save} className="bg-red-600 text-white">Save</Button>
-=======
-                <Button onClick={handleSave} className="bg-red-600 text-white">Save</Button>
->>>>>>> 969f6a781e360e4ed7de766738a40b3ac50fb5d0
-                <Button onClick={()=>{ resetContent(); toast({ title:'Restaurado', description:'Valores por defecto aplicados.'}); }} variant="outline">Reset</Button>
-                <a href="#" className="ml-auto"><Button variant="ghost">Exit Admin</Button></a>
-              </div>
-=======
->>>>>>> dev
             </div>
           </div>
         </div>

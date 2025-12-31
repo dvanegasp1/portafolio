@@ -62,14 +62,8 @@ const Testimonials = () => {
               whileHover={{ y: -5 }}
               className="group"
             >
-<<<<<<< HEAD
-              <div className="glass-effect rounded-2xl p-8 h-full hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20 relative">
-                {/* Quote Icon */}
-                <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-r from-red-500 to-rose-500 rounded-full flex items-center justify-center">
-=======
               <div className="glass-effect rounded-2xl p-8 h-full border border-white/10 hover:border-white/20 transition-all relative">
                 <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
->>>>>>> dev
                   <Quote className="w-4 h-4 text-white" />
                 </div>
 
@@ -96,19 +90,6 @@ const Testimonials = () => {
                   )}
                 </div>
 
-<<<<<<< HEAD
-                {/* Author Info */}
-                <div className="border-t border-white/10 pt-6">
-                  <div className="flex items-center">
-                    <img 
-                      className="w-12 h-12 rounded-full object-cover mr-4"
-                      alt={`${testimonial.name} - ${testimonial.position} de ${testimonial.company}`}
-                     src="https://images.unsplash.com/photo-1575383596664-30f4489f9786" />
-                    
-                    <div>
-                      <h4 className="font-semibold text-white">{testimonial.name}</h4>
-                      <p className="text-sm text-red-300">{testimonial.position}</p>
-=======
                 <div className="border-t border-white/10 pt-6 flex items-center">
                   {loading ? (
                     <SkeletonBlock className="w-12 h-12 rounded-full mr-4" />
@@ -144,7 +125,6 @@ const Testimonials = () => {
                       <p className="text-sm text-purple-300">{testimonial?.position}</p>
                     )}
                     {!loading && testimonial?.company && (
->>>>>>> dev
                       <p className="text-sm text-gray-400">{testimonial.company}</p>
                     )}
                   </div>

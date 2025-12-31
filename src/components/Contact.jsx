@@ -118,12 +118,8 @@ export default function Contact() {
                 {errors.message && <p className="text-red-400 text-xs mt-1">{errors.message}</p>}
               </div>
               <div className="md:col-span-2 flex gap-4">
-<<<<<<< HEAD
-                <Button type="submit" className="bg-gradient-to-r from-red-600 to-rose-600 text-white">
-=======
                 <Button type="submit" className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
                   <Send className="w-4 h-4 mr-2" />
->>>>>>> dev
                   Enviar Mensaje
                 </Button>
                 <Button type="button" variant="outline" onClick={handleScheduleCall} className="border-2 border-blue-500 text-blue-300 hover:bg-blue-500/10 hover:border-blue-400 transition-all duration-300">
@@ -134,22 +130,12 @@ export default function Contact() {
             </form>
           </motion.div>
 
-<<<<<<< HEAD
-          {/* Right: info cards */}
-          <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-4">
-            {contactInfo.map((c) => (
-              <div key={c.title} className="glass-effect rounded-2xl p-6 border border-white/10">
-                <div className="flex items-start">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center mr-3">
-                    <c.icon className="w-5 h-5 text-white" />
-=======
           <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="space-y-6">
             {loading
               ? [0, 1, 2].map((i) => (
                   <div key={i} className="glass-effect rounded-2xl p-6 border border-white/10">
                     <SkeletonBlock className="h-6 w-40 mb-2" />
                     <SkeletonBlock className="h-4 w-32" />
->>>>>>> dev
                   </div>
                 ))
               : infoBlocks.map((c) => (

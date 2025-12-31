@@ -54,15 +54,9 @@ const Team = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-<<<<<<< HEAD
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600/20 to-rose-600/20 rounded-full border border-red-500/30 mb-6">
-            <Users className="w-4 h-4 mr-2 text-red-400" />
-            <span className="text-sm font-medium text-red-300">Nuestro Equipo</span>
-=======
           <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full border border-blue-500/30 mb-6">
             <Users className="w-4 h-4 mr-2 text-blue-400" />
             <span className="text-sm font-medium text-blue-300">Equipo</span>
->>>>>>> dev
           </div>
 
           <h2 className="text-4xl lg:text-6xl font-bold mb-6">
@@ -86,33 +80,6 @@ const Team = () => {
               className="group"
             >
               <div className="glass-effect rounded-2xl p-6 h-full hover:shadow-2xl transition-all duration-300 border border-white/10 hover:border-white/20">
-<<<<<<< HEAD
-                {/* Profile Image */}
-                <div className="relative mb-6">
-                  <img 
-                    className="w-24 h-24 rounded-full mx-auto object-cover border-4 border-gradient-to-r from-red-500 to-rose-500"
-                    alt={`${member.name} - ${member.position} en Converse Advisory`}
-                   src="https://images.unsplash.com/photo-1686434538579-4723a0cf2890" />
-                  
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-red-500 to-rose-500 rounded-full flex items-center justify-center">
-                    <Award className="w-4 h-4 text-white" />
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="text-center">
-                  <h3 className="text-xl font-bold text-white mb-1">
-                    {member.name}
-                  </h3>
-                  
-                  <p className="text-red-300 font-medium mb-2">
-                    {member.position}
-                  </p>
-                  
-                  <div className="text-sm text-gray-400 mb-4">
-                    <div>{member.specialization}</div>
-                    <div>{member.experience}</div>
-=======
                 <div className="relative mb-6 flex justify-center">
                   {loading ? (
                     <SkeletonBlock className="w-24 h-24 rounded-full" />
@@ -164,7 +131,6 @@ const Team = () => {
                         {member?.experience && <div>{member.experience}</div>}
                       </>
                     )}
->>>>>>> dev
                   </div>
 
                   <p className="text-gray-300 text-sm leading-relaxed min-h-[3rem]">
@@ -172,34 +138,6 @@ const Team = () => {
                   </p>
 
                   <div className="space-y-1 mb-6">
-<<<<<<< HEAD
-                    {member.achievements.map((achievement, idx) => (
-                      <div key={idx} className="text-xs text-red-300 bg-red-500/10 rounded-full px-3 py-1 inline-block mr-1 mb-1">
-                        {achievement}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Contact Buttons */}
-                  <div className="flex justify-center space-x-2">
-                    <Button
-                      onClick={() => handleContactMember(member.name)}
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-300 hover:text-white hover:bg-red-600/20 p-2"
-                    >
-                      <Linkedin className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      onClick={() => handleContactMember(member.name)}
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-300 hover:text-white hover:bg-red-600/20 p-2"
-                    >
-                      <Mail className="w-4 h-4" />
-                    </Button>
-                  </div>
-=======
                     {loading
                       ? [0, 1, 2].map((s) => <SkeletonBlock key={s} className="h-4 w-24 mx-auto" />)
                       : (member?.achievements || []).map((achievement, idx) => (
@@ -229,7 +167,6 @@ const Team = () => {
                       </Button>
                     </div>
                   )}
->>>>>>> dev
                 </div>
               </div>
             </motion.div>

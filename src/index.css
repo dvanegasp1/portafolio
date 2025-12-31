@@ -43,11 +43,7 @@
 /* Custom utility classes used in components */
 @layer utilities {
   .gradient-text {
-<<<<<<< HEAD
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-rose-400;
-=======
     @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400;
->>>>>>> dev
   }
   .glass-effect {
     @apply bg-white/5 backdrop-blur-md border border-white/10;
@@ -63,4 +59,3 @@
   70% { box-shadow: 0 0 0 20px rgba(168, 85, 247, 0); }
   100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
 }
-

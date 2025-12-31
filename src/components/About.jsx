@@ -62,15 +62,9 @@ export default function About() {
             viewport={{ once: true }}
             className="order-1 lg:order-2"
           >
-<<<<<<< HEAD
-            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600/20 to-rose-600/20 rounded-full border border-red-500/30 mb-6">
-              <Award className="w-4 h-4 mr-2 text-red-400" />
-              <span className="text-sm font-medium text-red-300">About</span>
-=======
             <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full border border-purple-500/30 mb-6">
               <Award className="w-4 h-4 mr-2 text-purple-400" />
               <span className="text-sm font-medium text-purple-300">Sobre mí</span>
->>>>>>> dev
             </div>
 
             <h2 className="text-4xl lg:text-6xl font-bold mb-6">
@@ -138,37 +132,6 @@ export default function About() {
                 )}
               </div>
 
-<<<<<<< HEAD
-              {/* Floating overlay cards (restored style) */}
-              {(() => { const Icon = iconMap[content.whyUs?.[0]?.icon] || Users; return (
-                <div className="absolute -top-6 -left-6 w-64">
-                  <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-red-500 to-rose-500 flex items-center justify-center mr-3">
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-white font-semibold leading-tight">{content.whyUs?.[0]?.title || 'Equipo Experto'}</div>
-                        <div className="text-gray-300 text-sm">{content.whyUs?.[0]?.subtitle || 'Consultores Certificados'}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ); })()}
-
-              {(() => { const Icon = iconMap[content.whyUs?.[1]?.icon] || Target; return (
-                <div className="absolute -bottom-6 -right-6 w-72">
-                  <div className="glass-effect rounded-2xl p-4 border border-white/10 shadow-xl">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 flex items-center justify-center mr-3">
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-white font-semibold leading-tight">{content.whyUs?.[1]?.title || 'Resultados Garantizados'}</div>
-                        <div className="text-gray-300 text-sm">{content.whyUs?.[1]?.subtitle || 'ROI Comprobado'}</div>
-                      </div>
-                    </div>
-=======
               <div className="absolute -top-4 -left-4 hidden lg:block">
                 <div className="h-14 w-14 rounded-full bg-gradient-to-br from-purple-500/30 via-blue-500/20 to-transparent blur-xl" />
               </div>
@@ -187,7 +150,6 @@ export default function About() {
                     <p className="text-[20px] tracking-[0.35em] uppercase text-blue-200/80">Hallazgos</p>
                     <p className="text-[16px] font-semibold text-white mt-1.5 leading-tight">{primaryHighlight}</p>
                     {secondaryHighlight && <p className="text-[14px] text-gray-300 mt-1">{secondaryHighlight}</p>}
->>>>>>> dev
                   </div>
                 </div>
               )}
