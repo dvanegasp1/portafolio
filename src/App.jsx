@@ -4,7 +4,11 @@ import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Services from '@/components/Services';
+import Resume from '@/components/Resume.jsx';
+import ServiceDetail from '@/pages/ServiceDetail.jsx';
 import Projects from '@/components/Projects';
+import Blog from '@/pages/Blog.jsx';
+import BlogPost from '@/pages/BlogPost.jsx';
 import About from '@/components/About';
 import Team from '@/components/Team';
 import Testimonials from '@/components/Testimonials';
@@ -13,9 +17,11 @@ import Footer from '@/components/Footer';
 import { ContentProvider, useContent } from '@/content/ContentContext.jsx';
 import AdminPanel from '@/components/AdminPanel.jsx';
 import SimplePage from '@/pages/SimplePage.jsx';
+import Resources from '@/pages/Resources.jsx';
 
 function AppInner() {
-  const { content } = useContent();
+  const { content, supa } = useContent();
+  const loading = supa.loading;
   const getHash = () => (typeof window !== 'undefined' ? window.location.hash : '');
   const [hash, setHash] = useState(getHash());
   const isAdmin = hash === '#admin';
@@ -32,6 +38,16 @@ function AppInner() {
     return 'home';
   }, [hash, isAdmin]);
 
+  // Redirect away from disabled simple pages
+  useEffect(() => {
+    if (['careers', 'webinars', 'newsletter', 'help'].includes(route)) {
+      window.location.hash = '#';
+    }
+  }, [route]);
+
+  const seoTitle = content?.seo?.title || content?.siteName || '';
+  const seoDescription = content?.seo?.description || '';
+
   // Smooth-scroll to anchors when hash is a section id (e.g. #services)
   useEffect(() => {
     if (!hash || hash.startsWith('#/')) return;
@@ -44,48 +60,68 @@ function AppInner() {
     return () => clearTimeout(t);
   }, [hash]);
 
+  if (loading) {
+    return (
+      <>
+        <Helmet>
+          <title>Cargando...</title>
+          <meta name="description" content="Cargando contenido desde Supabase..." />
+        </Helmet>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex flex-col items-center justify-center text-blue-100">
+          <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-400 rounded-full animate-spin" />
+          <p className="mt-6 text-lg">Cargando contenido...</p>
+        </div>
+        <Toaster />
+      </>
+    );
+  }
+
   return (
     <>
       <Helmet>
-        <title>{content.seo.title}</title>
-        <meta name="description" content={content.seo.description} />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
       </Helmet>
       {isAdmin && <AdminPanel />}
+<<<<<<< HEAD
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-rose-900">
+=======
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+>>>>>>> dev
         <Header />
         {route === 'home' && (
           <>
             <Hero />
             <About />
             {content.visibility.services && <Services />}
+            {content.visibility.resume && <Resume />}
             {content.visibility.projects && <Projects />}
             {content.visibility.team && <Team />}
             {content.visibility.testimonials && <Testimonials />}
             <Contact />
           </>
         )}
-
-        {route === 'services' && <Services />}
+        {route.startsWith('services/') && <ServiceDetail slug={route.slice('services/'.length)} />}
         {route === 'projects' && <Projects />}
         {route === 'about' && <About />}
-        {route === 'blog' && (
-          <SimplePage title="Blog" subtitle="Notas y aprendizajes sobre análisis de datos.">
-            <p>Próximamente: artículos sobre BI, modelado de datos, visualización, y automatización.</p>
-          </SimplePage>
-        )}
+        {route === 'blog' && (<Blog />)}
+        {route.startsWith('blog/') && (<BlogPost slug={route.slice('blog/'.length)} />)}
         {route === 'careers' && (
           <SimplePage title="Carreras" subtitle="Colaboraciones y oportunidades de proyecto.">
             <p>¿Tienes un reto de datos? Escríbeme en la sección de contacto con detalles de objetivos y plazos.</p>
           </SimplePage>
         )}
         {route === 'resources' && (
-          <SimplePage title="Recursos Gratuitos" subtitle="Plantillas, snippets y guías rápidas de analítica.">
-            <ul>
-              <li>Checklist de calidad de datos</li>
-              <li>Guía de KPIs para e‑commerce</li>
-              <li>Snippet SQL de cohorts</li>
-            </ul>
-          </SimplePage>
+          <Resources />
+        )}
+        {route === 'articles' && (
+          <Resources filter="articulo" />
+        )}
+        {route === 'publications' && (
+          <Resources filter="publicacion" />
+        )}
+        {route === 'case-studies' && (
+          <Resources filter="caso" />
         )}
         {route === 'webinars' && (
           <SimplePage title="Webinars">
@@ -104,7 +140,7 @@ function AppInner() {
         )}
         {route === 'help' && (
           <SimplePage title="Centro de Ayuda">
-            <p>¿Dudas sobre el portfolio o servicios? Envíame un mensaje desde Contacto y te respondo en 24h.</p>
+            <p>¿Dudas sobre el portafolio o servicios? Envíame un mensaje desde Contacto y te respondo en 24h.</p>
           </SimplePage>
         )}
 
@@ -122,3 +158,5 @@ export default function App() {
     </ContentProvider>
   );
 }
+
+

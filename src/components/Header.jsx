@@ -2,12 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabaseClient.js';
 import { useContent } from '@/content/ContentContext.jsx';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { content } = useContent();
+  const logoUrl = (() => {
+    const lp = content?.branding?.logo_path;
+    if (!lp) return null;
+    if (/^(https?:|data:|blob:)/i.test(lp)) return lp;
+    if (supabase) return supabase.storage.from('portfolio-assets').getPublicUrl(lp).data.publicUrl;
+    return null;
+  })();
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 50);
@@ -16,21 +24,32 @@ export default function Header() {
   }, []);
 
   const navItems = [
-    { name: 'Home', href: '#home', show: true },
-    { name: 'Services', href: '#services', show: content.visibility.services },
-    { name: 'Projects', href: '#projects', show: content.visibility.projects },
-    { name: 'About', href: '#about', show: true },
-    { name: 'Team', href: '#team', show: content.visibility.team },
-    { name: 'Testimonials', href: '#testimonials', show: content.visibility.testimonials },
-    { name: 'Contact', href: '#contact', show: true },
-  ].filter(i => i.show);
+    { name: 'Inicio', href: '#home', show: true },
+    { name: 'Servicios', href: '#services', show: content.visibility.services },
+    { name: 'Proyectos', href: '#projects', show: content.visibility.projects },
+    { name: 'Blog', href: '#/blog', show: true },
+    { name: 'Sobre mí', href: '#about', show: true },
+    { name: 'Equipo', href: '#team', show: content.visibility.team },
+    { name: 'Testimonios', href: '#testimonials', show: content.visibility.testimonials },
+    { name: 'Contacto', href: '#contact', show: true },
+  ].filter((i) => i.show);
 
   const handleNavClick = (href) => {
-    const element = document.querySelector(href);
+    if (!href) return;
+    if (href.startsWith('#/')) {
+      window.location.hash = href;
+      setIsMenuOpen(false);
+      return;
+    }
+    let element = null;
+    try {
+      element = document.querySelector(href);
+    } catch (error) {
+      element = null;
+    }
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     } else {
-      // Navigate home with anchor so App can handle scroll after render
       window.location.hash = href;
     }
     setIsMenuOpen(false);
@@ -45,14 +64,34 @@ export default function Header() {
         isScrolled ? 'glass-effect shadow-2xl' : 'bg-transparent'
       }`}
     >
-      <nav className="container mx-auto px-6 py-4">
+      <nav className="container mx-auto px-6 py-2">
         <div className="flex items-center justify-between">
+<<<<<<< HEAD
           <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-2">
             <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-rose-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
             </div>
+=======
+          <motion.button
+            type="button"
+            onClick={() => handleNavClick('#home')}
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center space-x-2 focus:outline-none"
+          >
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={content.siteName + ' logo'}
+                className="w-12 h-12 md:w-14 md:h-14 object-contain rounded"
+              />
+            ) : (
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">{content.siteName?.[0] || 'B'}</span>
+              </div>
+            )}
+>>>>>>> dev
             <span className="text-2xl font-bold gradient-text">{content.siteName}</span>
-          </motion.div>
+          </motion.button>
 
           <div className="hidden lg:flex items-center space-x-8">
             {navItems.map((item, index) => (
@@ -64,7 +103,11 @@ export default function Header() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.08 }}
+<<<<<<< HEAD
                 className="text-white hover:text-red-300 transition-colors duration-300 font-medium"
+=======
+                className="text-white hover:text-blue-300 transition-colors duration-300 font-medium"
+>>>>>>> dev
               >
                 {item.name}
               </motion.button>
@@ -74,9 +117,13 @@ export default function Header() {
           <div className="hidden lg:block">
             <Button
               onClick={() => handleNavClick('#contact')}
+<<<<<<< HEAD
               className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 pulse-glow"
+=======
+              className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-900 hover:to-black text-white px-4 py-1.5 rounded-full font-semibold transition-all duration-300 pulse-glow"
+>>>>>>> dev
             >
-              Contact
+              Contacto
             </Button>
           </div>
 
@@ -96,16 +143,24 @@ export default function Header() {
               <button
                 key={item.name}
                 onClick={() => handleNavClick(item.href)}
+<<<<<<< HEAD
                 className="block w-full text-left py-3 text-white hover:text-red-300 transition-colors duration-300"
+=======
+                className="block w-full text-left py-3 text-white hover:text-blue-300 transition-colors duration-300"
+>>>>>>> dev
               >
                 {item.name}
               </button>
             ))}
             <Button
               onClick={() => handleNavClick('#contact')}
+<<<<<<< HEAD
               className="w-full mt-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white py-2 rounded-full font-semibold"
+=======
+              className="w-full mt-4 bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-900 hover:to-black text-white py-2 rounded-full font-semibold"
+>>>>>>> dev
             >
-              Contact
+              Contacto
             </Button>
           </motion.div>
         )}

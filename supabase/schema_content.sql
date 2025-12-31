@@ -33,6 +33,8 @@ create table if not exists site_settings (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+-- optional column used by UI for logo stored in Storage
+alter table site_settings add column if not exists logo_path text;
 alter table site_settings enable row level security;
 insert into site_settings (id, site_name, role)
 values (1, 'Beiby Vanegaz', 'Data Analyst')
@@ -129,6 +131,8 @@ create table if not exists about (
   heading text,
   description text
 );
+-- allow storing an image_path for About section
+alter table about add column if not exists image_path text;
 alter table about enable row level security;
 insert into about (site_id, heading, description)
 values (1, 'Hi, I''m Beiby Vanegaz', 'Data Analyst focused on transforming data into outcomes.')
@@ -162,7 +166,7 @@ create table if not exists about_highlights (
 alter table about_highlights enable row level security;
 insert into about_highlights (site_id, value, sort_order)
 values
-  (1, 'SQL, Python (pandas), Sheets', 10),
+  (1, 'kanime', 10),
   (1, 'Power BI, Tableau, Looker Studio', 20)
 on conflict do nothing;
 
@@ -192,8 +196,11 @@ create table if not exists services (
   icon text check (icon in ('BarChart3','Database','LineChart','Workflow')),
   title text not null,
   description text,
+  icon_path text,
   sort_order int default 0
 );
+-- Add icon_path column if it doesn't exist (for existing tables)
+alter table services add column if not exists icon_path text;
 alter table services enable row level security;
 drop policy if exists "services public read" on services;
 create policy "services public read" on services for select using (true);
@@ -311,6 +318,8 @@ create table if not exists visibility (
   testimonials boolean default false,
   team boolean default false
 );
+-- add resume toggle used by front-end
+alter table visibility add column if not exists resume boolean default true;
 alter table visibility enable row level security;
 insert into visibility (site_id) values (1)
 on conflict (site_id) do nothing;
@@ -411,3 +420,133 @@ using (
 );
 
 -- End of split schema
+
+-- 11) Resume: education and experience
+create table if not exists education (
+  id bigserial primary key,
+  site_id int not null references site_settings(id) on delete cascade,
+  institution text not null,
+  program text,
+  location text,
+  start_year text,
+  end_year text,
+  description text,
+  achievements text, -- pipe or newline separated, parsed by UI
+  icon_path text,
+  sort_order int default 0
+);
+alter table education enable row level security;
+drop policy if exists "education public read" on education;
+create policy "education public read" on education for select using (true);
+drop policy if exists "education admin write" on education;
+create policy "education admin write"
+on education for all to authenticated
+using (
+  site_id = 1 and exists (
+    select 1 from public.app_admins a where lower(a.email) = lower((auth.jwt() ->> 'email'))
+  )
+)
+with check (
+  site_id = 1 and exists (
+    select 1 from public.app_admins a where lower(a.email) = lower((auth.jwt() ->> 'email'))
+  )
+);
+
+create table if not exists experience (
+  id bigserial primary key,
+  site_id int not null references site_settings(id) on delete cascade,
+  company text not null,
+  role text,
+  location text,
+  start_year text,
+  end_year text,
+  description text,
+  achievements text,
+  icon_path text,
+  sort_order int default 0
+);
+alter table experience enable row level security;
+drop policy if exists "experience public read" on experience;
+create policy "experience public read" on experience for select using (true);
+drop policy if exists "experience admin write" on experience;
+create policy "experience admin write"
+on experience for all to authenticated
+using (
+  site_id = 1 and exists (
+    select 1 from public.app_admins a where lower(a.email) = lower((auth.jwt() ->> 'email'))
+  )
+)
+with check (
+  site_id = 1 and exists (
+    select 1 from public.app_admins a where lower(a.email) = lower((auth.jwt() ->> 'email'))
+  )
+);
+
+-- 12) Resume meta (summary text shown above timeline)
+create table if not exists resume_meta (
+  site_id int primary key references site_settings(id) on delete cascade,
+  summary text
+);
+
+-- 13) Blog posts
+create table if not exists blog_posts (
+  id bigserial primary key,
+  site_id int not null references site_settings(id) on delete cascade,
+  title text not null,
+  slug text not null,
+  excerpt text,
+  content_md text,
+  cover_image_path text,
+  tags text, -- pipe-separated list
+  published boolean default false,
+  published_at timestamptz,
+  sort_order int default 0,
+  unique (site_id, slug)
+);
+alter table blog_posts enable row level security;
+
+-- Public can read only published posts
+drop policy if exists "blog_posts public read" on blog_posts;
+create policy "blog_posts public read" on blog_posts for select using (
+  site_id = 1 and published = true
+);
+
+-- Admins can read and write all
+drop policy if exists "blog_posts admin read" on blog_posts;
+create policy "blog_posts admin read" on blog_posts for select to authenticated using (
+  site_id = 1 and exists (
+    select 1 from public.app_admins a where lower(a.email) = lower((auth.jwt() ->> 'email'))
+  )
+);
+
+drop policy if exists "blog_posts admin write" on blog_posts;
+create policy "blog_posts admin write" on blog_posts for all to authenticated using (
+  site_id = 1 and exists (
+    select 1 from public.app_admins a where lower(a.email) = lower((auth.jwt() ->> 'email'))
+  )
+) with check (
+  site_id = 1 and exists (
+    select 1 from public.app_admins a where lower(a.email) = lower((auth.jwt() ->> 'email'))
+  )
+);
+alter table resume_meta enable row level security;
+insert into resume_meta (site_id, summary)
+values (1, '')
+on conflict (site_id) do nothing;
+
+drop policy if exists "resume_meta public read" on resume_meta;
+create policy "resume_meta public read" on resume_meta for select using (true);
+
+drop policy if exists "resume_meta admin write" on resume_meta;
+create policy "resume_meta admin write"
+on resume_meta for all to authenticated
+using (
+  site_id = 1 and exists (
+    select 1 from public.app_admins a where lower(a.email) = lower((auth.jwt() ->> 'email'))
+  )
+)
+with check (
+  site_id = 1 and exists (
+    select 1 from public.app_admins a where lower(a.email) = lower((auth.jwt() ->> 'email'))
+  )
+);

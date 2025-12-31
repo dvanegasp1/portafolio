@@ -43,7 +43,11 @@
 /* Custom utility classes used in components */
 @layer utilities {
   .gradient-text {
+<<<<<<< HEAD
     @apply bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-rose-400;
+=======
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400;
+>>>>>>> dev
   }
   .glass-effect {
     @apply bg-white/5 backdrop-blur-md border border-white/10;
